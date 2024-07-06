@@ -1,0 +1,64 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+
+    <!-- Premier livre -->
+    <LinearLayout
+        android:id="@+id/book1_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/book1_image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:layout_gravity="center_horizontal"
+            android:maxHeight="200dp"
+            android:src="@drawable/placeholder"/>
+
+        <TextView
+            android:id="@+id/book1_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingTop="8dp"/>
+
+    </LinearLayout>
+
+    <!-- Deuxième livre -->
+    <LinearLayout
+        android:id="@+id/book2_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <ImageView
+            android:id="@+id/book2_image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:layout_gravity="center_horizontal"
+            android:maxHeight="200dp"
+            android:src="@drawable/placeholder"/>
+
+        <TextView
+            android:id="@+id/book2_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:paddingTop="8dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>
