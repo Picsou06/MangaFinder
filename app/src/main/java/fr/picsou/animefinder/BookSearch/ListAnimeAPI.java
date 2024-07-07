@@ -90,9 +90,9 @@ public class ListAnimeAPI {
 
                     @Override
                     public void onResponse(JSONArray response) {
+                        System.out.println("HELPER, chercher: "+response);
                         try {
                             List<BookClass> tempBookList = new ArrayList<>();
-                            System.out.println("HELPER, chercher: "+response);
 
                             for (int i = 0; i < response.length(); i++) {
                                 JSONObject manga = response.getJSONObject(i);
