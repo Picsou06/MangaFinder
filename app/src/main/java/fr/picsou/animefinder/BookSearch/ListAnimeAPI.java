@@ -1,21 +1,23 @@
 package fr.picsou.animefinder.BookSearch;
 
 import android.content.Context;
+import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListAnimeAPI {
 
-    private static final String API_BASE_URL = "http://Picsou06.fun:3000/manga/mangadex/a";
+    private static final String API_BASE_URL = "http://Picsou06.fun:3000/";
 
     private Context mContext;
     private List<BookClass> mBookList;
@@ -27,47 +29,104 @@ public class ListAnimeAPI {
         mBookList = bookList;
     }
 
-    public void fetchAnimeList() {
-        System.out.println("HELPER, Fetching anime list from: " + API_BASE_URL);
+    public void purgeBookList() {
+        mBookList.clear();
+    }
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.GET, API_BASE_URL, null, new Response.Listener<JSONObject>() {
+    public void fetchAnimeListFromAPI(int count) {
+        purgeBookList();
+        String apiUrl = API_BASE_URL + "listmanga/" + count;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest
+                (Request.Method.GET, apiUrl, null, new Response.Listener<JSONArray>() {
 
                     @Override
-                    public void onResponse(JSONObject response) {
-                        System.out.println("HELPER, Response received: " + response.toString());
+                    public void onResponse(JSONArray response) {
                         try {
-                            JSONArray animeArray = response.getJSONArray("results");
-                            for (int i = 0; i < animeArray.length(); i++) {
-                                JSONObject animeObject = animeArray.getJSONObject(i);
-                                String id = animeObject.getString("id");
-                                String title = animeObject.getString("title");
-                                String imageUrl = animeObject.optString("image", "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSSLt36mzLsH1TvlwQfHM3ZeTFVodb0yTc-iJkvl5yp1AZnHNkn");
+                            List<BookClass> tempBookList = new ArrayList<>();
 
-                                // Créer un objet BookClass et l'ajouter à mBookList
+                            for (int i = 0; i < response.length(); i++) {
+                                JSONObject manga = response.getJSONObject(i);
+                                System.out.println("HELPER, Manga: " + manga.toString()+"  "+response.length());
+                                String id = manga.getString("id");
+                                String title = manga.getString("title");
+                                String imageUrl = manga.getString("picture");
+
                                 BookClass book = new BookClass(id, title, imageUrl);
-                                mBookList.add(book);
+                                tempBookList.add(book);
                                 System.out.println("HELPER, Book added: " + book.toString());
                             }
+
+                            mBookList.clear();
+                            mBookList.addAll(tempBookList);
 
                             // Notify the adapter of data changes
                             mAdapter.notifyDataSetChanged();
                             System.out.println("HELPER, Adapter notified with new data.");
 
                         } catch (JSONException e) {
-                            System.out.println("HELPER, JSON parsing error: " + e.getMessage());
+                            Toast.makeText(mContext, "JSON parsing error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }, new Response.ErrorListener() {
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        System.out.println("HELPER, Error fetching anime list: " + error.getMessage());
+                        Toast.makeText(mContext, "Error fetching anime list: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 });
 
         // Ajouter la requête à la file d'attente de Volley
         RequestQueue queue = Volley.newRequestQueue(mContext);
-        queue.add(jsonObjectRequest);
+        queue.add(jsonArrayRequest);
+    }
+
+    public void fetchAnimeTitleFromAPI(String title) {
+        purgeBookList();
+        String apiUrl = API_BASE_URL + "searchmanga/" + title;
+
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest
+                (Request.Method.GET, apiUrl, null, new Response.Listener<JSONArray>() {
+
+                    @Override
+                    public void onResponse(JSONArray response) {
+                        try {
+                            List<BookClass> tempBookList = new ArrayList<>();
+                            System.out.println("HELPER, chercher: "+response);
+
+                            for (int i = 0; i < response.length(); i++) {
+                                JSONObject manga = response.getJSONObject(i);
+                                System.out.println("HELPER, Manga: " + manga.toString()+"  "+response.length());
+                                String id = manga.getString("id");
+                                String title = manga.getString("title");
+                                String imageUrl = manga.getString("picture");
+
+                                BookClass book = new BookClass(id, title, imageUrl);
+                                tempBookList.add(book);
+                                System.out.println("HELPER, Book added: " + book.toString());
+                            }
+
+                            mBookList.clear();
+                            mBookList.addAll(tempBookList);
+
+                            // Notify the adapter of data changes
+                            mAdapter.notifyDataSetChanged();
+                            System.out.println("HELPER, Adapter notified with new data.");
+
+                        } catch (JSONException e) {
+                            Toast.makeText(mContext, "JSON parsing error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(mContext, "Error fetching anime list: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        // Ajouter la requête à la file d'attente de Volley
+        RequestQueue queue = Volley.newRequestQueue(mContext);
+        queue.add(jsonArrayRequest);
     }
 }
