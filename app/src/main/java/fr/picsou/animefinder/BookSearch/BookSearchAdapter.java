@@ -8,14 +8,10 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
-
 import java.util.List;
-
 import fr.picsou.animefinder.R;
 
 public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.BookViewHolder> {
@@ -31,6 +27,12 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
     public void setOnBookClickListener(OnBookClickListener listener) {
         Log.d("BookSearchAdapter", "Listener Enabled");
         mListener = listener;
+    }
+
+    public void updateBooks(List<BookClass> newBookList) {
+        mBookList.clear();
+        mBookList.addAll(newBookList);
+        notifyDataSetChanged();
     }
 
     @NonNull
