@@ -8,7 +8,6 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
 import android.view.MenuItem;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -24,7 +23,6 @@ public class MainActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.viewPager);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        // Création de l'adapter pour les fragments
         FragmentStateAdapter pagerAdapter = new FragmentStateAdapter(this) {
             @NonNull
             @Override
@@ -41,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public int getItemCount() {
-                return 2; // Nombre de fragments
+                return 2;
             }
         };
 

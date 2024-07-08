@@ -1,54 +1,40 @@
 package fr.picsou.animefinder;
 
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.lifecycleScope;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import fr.picsou.animefinder.BookSearch.BookClass;
+import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
 import fr.picsou.animefinder.BookSearch.BookSearchAdapter;
 import fr.picsou.animefinder.BookSearch.ListAnimeAPI;
-import android.text.Editable;
-import android.text.TextWatcher;
+import kotlinx.coroutines.Dispatchers;
+import kotlinx.coroutines.launch;
 
 public class FinderFragment extends Fragment implements BookSearchAdapter.OnBookClickListener {
     private RecyclerView mRecyclerView;
     private BookSearchAdapter mAdapter;
     private List<BookClass> mBookList;
-    private BottomNavigationView bottomNavigationView;
-    private static final String SEARCH_KEY = "search_key";
-    private static final String PAGE_KEY = "page_key";
     private ListAnimeAPI listAnimeAPI;
     private EditText searchEditText;
 
     public FinderFragment() {
         // Required empty public constructor
-    }
-
-    public static FinderFragment newInstance(String currentSearch, Integer currentPage) {
-        FinderFragment fragment = new FinderFragment();
-        Bundle args = new Bundle();
-        args.putString(SEARCH_KEY, currentSearch);
-        args.putInt(PAGE_KEY, currentPage);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            String search = getArguments().getString(SEARCH_KEY);
-            int page = getArguments().getInt(PAGE_KEY);
-        }
     }
 
     @Override
@@ -61,16 +47,20 @@ public class FinderFragment extends Fragment implements BookSearchAdapter.OnBook
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        mRecyclerView = view.findViewById(R.id.recycler_view_books);
+        RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_books);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        mBookList = new ArrayList<>();
-        mAdapter = new BookSearchAdapter(getContext(), mBookList);
+        List<BookClass> mBookList = new ArrayList<>();
+        BookSearchAdapter mAdapter = new BookSearchAdapter(getContext(), mBookList);
         mAdapter.setOnBookClickListener(this); // Set the click listener
         mRecyclerView.setAdapter(mAdapter);
 
         // Initialize ListAnimeAPI and fetch the anime list
-        listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, mBookList);
-        listAnimeAPI.fetchAnimeListFromAPI(500);
+        listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter);
+
+        // Launch coroutine using lifecycleScope
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+            listAnimeAPI.updateDatabase(BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue()); // Fetch data from the database
+        };
 
         // Setup the EditText and TextWatcher
         searchEditText = view.findViewById(R.id.search_edit_text);
@@ -89,8 +79,20 @@ public class FinderFragment extends Fragment implements BookSearchAdapter.OnBook
             public void afterTextChanged(Editable s) {
                 String searchText = s.toString().trim();
                 if (!searchText.isEmpty()) {
-                    // Call the API to fetch anime titles based on the search text
-                    listAnimeAPI.fetchAnimeTitleFromAPI(searchText);
+                    listAnimeAPI.searchBooksFromDatabase(searchText);
+                }
+            }
+        });
+
+        // Set focus change listener on the search EditText
+        searchEditText.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                String searchText = searchEditText.getText().toString().trim();
+                if (TextUtils.isEmpty(searchText)) {
+                    // Launch coroutine to fetch all data from the database
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+                        listAnimeAPI.fetchBooksFromDatabase();
+                    };
                 }
             }
         });
