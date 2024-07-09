@@ -8,7 +8,11 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.Toast;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +23,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        createAnimeFinderFolder();
 
         viewPager = findViewById(R.id.viewPager);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
@@ -31,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
                     case 0:
                         return new FinderFragment();
                     case 1:
-                        return new ReaderFragment();
+                        return new DownloadedListFragment();
                     default:
                         return null;
                 }
@@ -76,5 +82,19 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+    private void createAnimeFinderFolder() {
+        File animeFinderDir = new File(getFilesDir(), "AnimeFinder");
+        if (!animeFinderDir.exists()) {
+            if (animeFinderDir.mkdir()) {
+                Toast.makeText(getBaseContext(), "Dossier AnimeFinder créé avec succès.", Toast.LENGTH_SHORT).show();
+                System.out.println("HELPER, Dossier AnimeFinder créé avec succès." + getFilesDir());
+            } else {
+                Toast.makeText(getBaseContext(), "Échec de la création du dossier AnimeFinder.", Toast.LENGTH_SHORT).show();
+            }
+        }
+        else {
+            System.out.println("HELPER, Dossier AnimeFinder déjà existant." + getFilesDir());
+        }
     }
 }

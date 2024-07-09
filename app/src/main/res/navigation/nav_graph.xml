@@ -11,7 +11,7 @@
 
     <fragment
         android:id="@+id/ReaderFragment"
-        android:name="fr.picsou.animefinder.ReaderFragment"
+        android:name="fr.picsou.animefinder.DownloadedListFragment"
         android:label="Reader Fragment"/>
 
 </navigation>

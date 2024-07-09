@@ -1,6 +1,8 @@
 package fr.picsou.animefinder.BookSearch;
 
+import android.app.Activity;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.Request;
@@ -17,56 +19,66 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ListAnimeAPI {
+    private static final String API_BASE_URL = "http://Picsou06.fun:3001/";
+    private final Context mContext;
+    private RecyclerView.Adapter mainAdapter;
+    private RecyclerView.Adapter searchAdapter;
 
-    private static final String API_BASE_URL = "http://Picsou06.fun:3000/";
-    private Context mContext;
-    private RecyclerView.Adapter mAdapter;
-
-    public ListAnimeAPI(Context context, RecyclerView.Adapter adapter) {
+    public ListAnimeAPI(Context context, RecyclerView.Adapter mainAdapter, RecyclerView.Adapter searchAdapter) {
         mContext = context;
-        mAdapter = adapter;
+        this.mainAdapter = mainAdapter;
+        this.searchAdapter = searchAdapter;
     }
 
     public void fetchAnimeListFromAPI() {
-        System.out.println("HELPER, UpdateDatabase");
-        BookLocalDatabase.getDatabase(mContext).bookDao().DeleteAllBook();
         String apiUrl = API_BASE_URL + "listmanga/";
 
-        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest
-                (Request.Method.GET, apiUrl, null, new Response.Listener<JSONArray>() {
-
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, apiUrl, null,
+                new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
-                        try {
+                        AsyncTask.execute(() -> {
                             List<BookClass> tempBookList = new ArrayList<>();
+                            try {
+                                for (int i = 0; i < response.length(); i++) {
+                                    JSONObject manga = response.getJSONObject(i);
+                                    String id = manga.getString("id");
+                                    String title = manga.getString("title");
+                                    String imageUrl = manga.getString("picture");
+                                    String website = manga.getString("website");
 
-                            for (int i = 0; i < response.length(); i++) {
-                                JSONObject manga = response.getJSONObject(i);
-                                String id = manga.getString("id");
-                                String title = manga.getString("title");
-                                String imageUrl = manga.getString("picture");
-                                String website = manga.getString("website");
+                                    BookClass book = new BookClass(id, title, imageUrl, website);
+                                    tempBookList.add(book);
+                                }
+                                // Insertion des livres dans la base de données
+                                BookLocalDatabase.getDatabase(mContext).bookDao().DeleteAllBook();
+                                BookLocalDatabase.getDatabase(mContext).bookDao().insertBooks(tempBookList);
+                                BookClass lastBook = BookLocalDatabase.getDatabase(mContext).bookDao().getLastInsertedBook();
+                                String lastBookInfo = "HELPER Dernier livre inséré : " + lastBook.getTitle() + " (" + lastBook.getId() + ")";
+                                System.out.println(lastBookInfo);
 
-                                BookClass book = new BookClass(id, title, imageUrl, website);
-                                System.out.println("HELPER New Book: "+title);
-                                tempBookList.add(book);
+                                // Notification à l'adaptateur après l'insertion des données
+                                Activity activity = (Activity) mContext;
+                                activity.runOnUiThread(() -> {
+                                    mainAdapter.notifyDataSetChanged();
+                                    Toast.makeText(mContext, "Données chargées avec succès", Toast.LENGTH_SHORT).show();
+                                });
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                                Activity activity = (Activity) mContext;
+                                activity.runOnUiThread(() -> {
+                                    Toast.makeText(mContext, "Erreur de parsing JSON : " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
                             }
-                            BookLocalDatabase.getDatabase(mContext).bookDao().insertBooks(tempBookList);
-
-                            // Fetch the updated data from the database and update the adapter
-                            fetchBooksFromDatabase();
-
-                        } catch (JSONException e) {
-                            Toast.makeText(mContext, "JSON parsing error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
+                        });
                     }
                 }, new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(mContext, "Error fetching anime list: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(mContext, "Erreur lors du téléchargement : " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
         RequestQueue queue = Volley.newRequestQueue(mContext);
         queue.add(jsonArrayRequest);
@@ -75,47 +87,59 @@ public class ListAnimeAPI {
     public void searchBooksFromDatabase(String searchText) {
         new Thread(() -> {
             List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().searchBooks(searchText);
-            ((BookSearchAdapter) mAdapter).updateBooks(bookList);
+
+            Activity activity = (Activity) mContext;
+            activity.runOnUiThread(() -> {
+                ((BookSearchAdapter) searchAdapter).clearBooks();
+                ((BookSearchAdapter) searchAdapter).updateBooks(bookList);
+            });
         }).start();
     }
 
-
-    public void fetchBooksFromDatabase() {
+    public void fetchBooksFromDatabase(int limit, int offset, RecyclerView.Adapter adapter) {
         new Thread(() -> {
-            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().getAllBooks();
-            ((BookSearchAdapter) mAdapter).updateBooks(bookList);
+            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().getBooks(limit, offset);
+
+            // Mise à jour de l'interface utilisateur sur le thread principal
+            Activity activity = (Activity) mContext;
+            activity.runOnUiThread(() -> {
+                if (adapter instanceof BookDownloaderAdapter) {
+                    ((BookDownloaderAdapter) adapter).updateBooks(bookList);
+                } else if (adapter instanceof BookSearchAdapter) {
+                    ((BookSearchAdapter) adapter).updateBooks(bookList);
+                }
+                adapter.notifyDataSetChanged();
+            });
         }).start();
     }
 
     public void updateDatabase(long numberOfValue) {
-        System.out.println("HELPER, UpdateDatabase: "+numberOfValue);
+        System.out.println("HELPER, UpdateDatabase: " + numberOfValue);
         String apiUrl = API_BASE_URL + "isupdated/" + numberOfValue;
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest
-                (Request.Method.GET, apiUrl, null, new Response.Listener<JSONObject>() {
-
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        try {
-                            boolean isUpToDate = response.getBoolean("updated");
-                            System.out.println("HELPER, need to be updated? : "+isUpToDate);
-                            if (!isUpToDate) {
-                                fetchAnimeListFromAPI();
-                            }
-
-                        } catch (JSONException e) {
-                            Toast.makeText(mContext, "JSON parsing error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, apiUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    boolean isUpToDate = response.getBoolean("updated");
+                    System.out.println("HELPER, need to be updated? : " + isUpToDate);
+                    if (!isUpToDate) {
+                        fetchAnimeListFromAPI();
                     }
-                }, new Response.ErrorListener() {
-
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Toast.makeText(mContext, "Error fetching update status: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                });
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Toast.makeText(mContext, "HELPER JSON parsing error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(mContext, "HELPER Volley error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
         RequestQueue queue = Volley.newRequestQueue(mContext);
         queue.add(jsonObjectRequest);
     }
 }
+

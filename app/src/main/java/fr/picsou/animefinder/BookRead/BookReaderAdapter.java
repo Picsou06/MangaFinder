@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookSearch;
+package fr.picsou.animefinder.BookRead;
 
 import android.content.Context;
 import android.util.Log;
@@ -8,22 +8,18 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
-
 import java.util.List;
-
 import fr.picsou.animefinder.R;
 
-public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.BookViewHolder> {
+public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.BookViewHolder> {
     private final Context mContext;
-    private final List<BookClass> mBookList;
+    private final List<BookReaderClass> mBookList;
     private OnBookClickListener mListener;
 
-    public BookSearchAdapter(Context context, List<BookClass> bookList) {
+    public BookReaderAdapter(Context context, List<BookReaderClass> bookList) {
         mContext = context;
         mBookList = bookList;
     }
@@ -33,7 +29,7 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
         mListener = listener;
     }
 
-    public void updateBooks(List<BookClass> newBookList) {
+    public void updateBooks(List<BookReaderClass> newBookList) {
         mBookList.addAll(newBookList);
         notifyDataSetChanged();
     }
@@ -82,11 +78,16 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
 
     @Override
     public int getItemCount() {
-        return (int) Math.ceil((double) mBookList.size() / 2);
+        if (mBookList == null) {
+            return 0;
+        } else {
+            return (int) Math.ceil((double) mBookList.size() / 2);
+        }
     }
 
+
     public interface OnBookClickListener {
-        void onBookClick(BookClass book);
+        void onBookClick(BookReaderClass book);
     }
 
     public static class BookViewHolder extends RecyclerView.ViewHolder {
@@ -104,18 +105,18 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
             book2Title = itemView.findViewById(R.id.book2_title);
         }
 
-        public void bindFirstBook(BookClass book) {
+        public void bindFirstBook(BookReaderClass book) {
             book1Container.setVisibility(View.VISIBLE);
             Glide.with(itemView.getContext())
-                    .load(book.getImageUrl())
+                    .load(book.getImageCover())
                     .into(book1Image);
             book1Title.setText(book.getTitle());
         }
 
-        public void bindSecondBook(BookClass book) {
+        public void bindSecondBook(BookReaderClass book) {
             book2Container.setVisibility(View.VISIBLE);
             Glide.with(itemView.getContext())
-                    .load(book.getImageUrl())
+                    .load(book.getImageCover())
                     .into(book2Image);
             book2Title.setText(book.getTitle());
         }

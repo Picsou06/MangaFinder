@@ -1,8 +1,8 @@
 package fr.picsou.animefinder;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,7 +12,6 @@ import android.widget.EditText;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.lifecycleScope;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -21,17 +20,17 @@ import java.util.List;
 
 import fr.picsou.animefinder.BookSearch.BookClass;
 import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
+import fr.picsou.animefinder.BookSearch.BookDownloaderAdapter;
 import fr.picsou.animefinder.BookSearch.BookSearchAdapter;
 import fr.picsou.animefinder.BookSearch.ListAnimeAPI;
-import kotlinx.coroutines.Dispatchers;
-import kotlinx.coroutines.launch;
 
-public class FinderFragment extends Fragment implements BookSearchAdapter.OnBookClickListener {
-    private RecyclerView mRecyclerView;
-    private BookSearchAdapter mAdapter;
-    private List<BookClass> mBookList;
+public class FinderFragment extends Fragment implements BookDownloaderAdapter.OnBookClickListener, BookSearchAdapter.OnBookClickListener {
     private ListAnimeAPI listAnimeAPI;
+    private BookDownloaderAdapter mAdapter;
+    private BookSearchAdapter searchAdapter;
     private EditText searchEditText;
+    private int currentPage = 0;
+    private static final int PAGE_SIZE = 25;
 
     public FinderFragment() {
         // Required empty public constructor
@@ -50,17 +49,19 @@ public class FinderFragment extends Fragment implements BookSearchAdapter.OnBook
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_books);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         List<BookClass> mBookList = new ArrayList<>();
-        BookSearchAdapter mAdapter = new BookSearchAdapter(getContext(), mBookList);
-        mAdapter.setOnBookClickListener(this); // Set the click listener
+        List<BookClass> searchBookList = new ArrayList<>();
+        mAdapter = new BookDownloaderAdapter(getContext(), mBookList);
+        searchAdapter = new BookSearchAdapter(getContext(), searchBookList);
+        mAdapter.setOnBookClickListener(this);
+        searchAdapter.setOnBookClickListener(this);
         mRecyclerView.setAdapter(mAdapter);
 
         // Initialize ListAnimeAPI and fetch the anime list
-        listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter);
-
-        // Launch coroutine using lifecycleScope
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-            listAnimeAPI.updateDatabase(BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue()); // Fetch data from the database
-        };
+        listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, searchAdapter);
+        AsyncTask.execute(() -> {
+            long count = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
+            listAnimeAPI.updateDatabase(count);
+        });
 
         // Setup the EditText and TextWatcher
         searchEditText = view.findViewById(R.id.search_edit_text);
@@ -79,23 +80,58 @@ public class FinderFragment extends Fragment implements BookSearchAdapter.OnBook
             public void afterTextChanged(Editable s) {
                 String searchText = s.toString().trim();
                 if (!searchText.isEmpty()) {
+                    switchToSearchAdapter();
                     listAnimeAPI.searchBooksFromDatabase(searchText);
+                } else {
+                    switchToMainAdapter();
+                    loadInitialData();
                 }
             }
         });
 
-        // Set focus change listener on the search EditText
-        searchEditText.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus) {
-                String searchText = searchEditText.getText().toString().trim();
-                if (TextUtils.isEmpty(searchText)) {
-                    // Launch coroutine to fetch all data from the database
-                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                        listAnimeAPI.fetchBooksFromDatabase();
-                    };
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                int totalItemCount = layoutManager.getItemCount();
+                int lastVisibleItem = layoutManager.findLastVisibleItemPosition();
+
+                if (totalItemCount <= (lastVisibleItem + PAGE_SIZE)) {
+                    loadMoreData();
                 }
             }
         });
+
+        loadInitialData();
+    }
+
+    private void loadInitialData() {
+        AsyncTask.execute(() -> {
+            long totalBooks = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
+            listAnimeAPI.updateDatabase(totalBooks);
+            getActivity().runOnUiThread(() -> mAdapter.notifyDataSetChanged());
+            loadMoreData();
+        });
+    }
+
+    private void loadMoreData() {
+        int offset = currentPage * PAGE_SIZE;
+        listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, offset, mAdapter);
+        currentPage++;
+    }
+
+    private void switchToMainAdapter() {
+        RecyclerView mRecyclerView = getView().findViewById(R.id.recycler_view_books);
+        mRecyclerView.setAdapter(mAdapter);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    private void switchToSearchAdapter() {
+        RecyclerView mRecyclerView = getView().findViewById(R.id.recycler_view_books);
+        mRecyclerView.setAdapter(searchAdapter);
+        searchAdapter.notifyDataSetChanged();
     }
 
     @Override

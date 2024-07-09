@@ -1,56 +1,49 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainlayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/black">
 
-    <!-- Search bar and button -->
-    <LinearLayout
-        android:id="@+id/search_layout"
+    <TextView
+        android:id="@+id/text_view_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
+        android:padding="16dp"
+        android:text="Mangas Téléchargés"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="center"
         android:background="@color/recherche"
-        android:layout_alignParentTop="true"
-        android:layout_marginBottom="8dp">
-
-        <EditText
-            android:id="@+id/search_edit_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="Search..."
-            android:padding="8dp"
-            android:background="@android:color/transparent"
-            android:inputType="text" />
-
-
-        <ImageButton
-            android:id="@+id/search_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_search"
-            android:contentDescription="Search"
-            android:background="?attr/selectableItemBackground"
-            android:padding="8dp" />
-    </LinearLayout>
+        android:layout_alignParentTop="true" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_books"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/search_layout"
+        android:layout_below="@id/text_view_header"
         android:layout_above="@id/bottom_navigation"
         android:paddingBottom="56dp" />
 
+    <TextView
+        android:id="@+id/text_view_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Vous n'avez encore téléchargé aucun manga."
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
     <FrameLayout
-        android:id="@+id/fragment_container_finder"
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@id/search_layout"
-        android:layout_above="@id/bottom_navigation" />
+        android:layout_below="@id/text_view_header"
+        android:layout_above="@id/bottom_navigation"
+        tools:ignore="NotSibling" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
