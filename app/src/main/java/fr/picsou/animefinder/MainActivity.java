@@ -31,8 +31,6 @@ public class MainActivity extends AppCompatActivity {
         viewPager = findViewById(R.id.viewPager);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        BookLocalDatabase.resetDatabase(this);
-
         FragmentStateAdapter pagerAdapter = new FragmentStateAdapter(this) {
             @NonNull
             @Override
@@ -91,14 +89,10 @@ public class MainActivity extends AppCompatActivity {
         File animeFinderDir = new File(getFilesDir(), "AnimeFinder");
         if (!animeFinderDir.exists()) {
             if (animeFinderDir.mkdir()) {
-                Toast.makeText(getBaseContext(), "Dossier AnimeFinder créé avec succès.", Toast.LENGTH_SHORT).show();
-                System.out.println("HELPER, Dossier AnimeFinder créé avec succès." + getFilesDir());
+                Toast.makeText(getBaseContext(), "Dossier AnimeFinder créé avec succès."+getFilesDir(), Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(getBaseContext(), "Échec de la création du dossier AnimeFinder.", Toast.LENGTH_SHORT).show();
             }
-        }
-        else {
-            System.out.println("HELPER, Dossier AnimeFinder déjà existant." + getFilesDir());
         }
     }
 }

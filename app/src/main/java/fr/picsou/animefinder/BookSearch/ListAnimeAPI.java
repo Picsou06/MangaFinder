@@ -55,8 +55,6 @@ public class ListAnimeAPI {
                                 BookLocalDatabase.getDatabase(mContext).bookDao().DeleteAllBook();
                                 BookLocalDatabase.getDatabase(mContext).bookDao().insertBooks(tempBookList);
                                 BookClass lastBook = BookLocalDatabase.getDatabase(mContext).bookDao().getLastInsertedBook();
-                                String lastBookInfo = "HELPER Dernier livre inséré : " + lastBook.getTitle() + " (" + lastBook.getId() + ")";
-                                System.out.println(lastBookInfo);
 
                                 // Notification à l'adaptateur après l'insertion des données
                                 Activity activity = (Activity) mContext;
@@ -122,7 +120,6 @@ public class ListAnimeAPI {
             public void onResponse(JSONObject response) {
                 try {
                     boolean isUpToDate = response.getBoolean("updated");
-                    System.out.println("HELPER, need to be updated? : " + isUpToDate);
                     if (!isUpToDate) {
                         fetchAnimeListFromAPI();
                     }

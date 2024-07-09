@@ -1,5 +1,6 @@
 package fr.picsou.animefinder;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,7 +48,7 @@ public class DownloadedListFragment extends Fragment {
             bookAdapter.setOnBookClickListener(new BookReaderAdapter.OnBookClickListener() {
                 @Override
                 public void onBookClick(BookReaderClass book) {
-                    openChapitreSelectorFragment(book);
+                    openChapitreSelectorActivity(book);
                 }
             });
         }
@@ -55,21 +56,12 @@ public class DownloadedListFragment extends Fragment {
         return view;
     }
 
-    private void openChapitreSelectorFragment(BookReaderClass book) {
-        Bundle args = new Bundle();
-        args.putString("cover", book.getImageCover());
-        args.putString("animeName", book.getTitle());
-
-        ChapitreSelectorFragment chapitreSelectorFragment = new ChapitreSelectorFragment();
-        chapitreSelectorFragment.setArguments(args);
-
-        requireActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container, chapitreSelectorFragment)
-                .addToBackStack(null)
-                .commit();
+    private void openChapitreSelectorActivity(BookReaderClass book) {
+        Intent intent = new Intent(getActivity(), ChapitreReaderSelectorActivity.class);
+        intent.putExtra("cover", book.getImageCover());
+        intent.putExtra("animeName", book.getTitle());
+        startActivity(intent);
     }
-
-
 
     private List<BookReaderClass> getListOfBooks() {
         List<BookReaderClass> bookList = new ArrayList<>();
