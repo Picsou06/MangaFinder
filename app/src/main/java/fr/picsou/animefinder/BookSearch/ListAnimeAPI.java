@@ -46,8 +46,9 @@ public class ListAnimeAPI {
                                     String title = manga.getString("title");
                                     String imageUrl = manga.getString("picture");
                                     String website = manga.getString("website");
+                                    String language = manga.getString("language");
 
-                                    BookClass book = new BookClass(id, title, imageUrl, website);
+                                    BookClass book = new BookClass(id, title, imageUrl, website, language);
                                     tempBookList.add(book);
                                 }
                                 // Insertion des livres dans la base de données
@@ -86,7 +87,7 @@ public class ListAnimeAPI {
 
     public void searchBooksFromDatabase(String searchText) {
         new Thread(() -> {
-            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().searchBooks(searchText);
+            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().searchBooks(searchText, "fr");
 
             Activity activity = (Activity) mContext;
             activity.runOnUiThread(() -> {
@@ -98,7 +99,7 @@ public class ListAnimeAPI {
 
     public void fetchBooksFromDatabase(int limit, int offset, RecyclerView.Adapter adapter) {
         new Thread(() -> {
-            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().getBooks(limit, offset);
+            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().getBooks(limit, offset, "fr");
 
             // Mise à jour de l'interface utilisateur sur le thread principal
             Activity activity = (Activity) mContext;
@@ -114,7 +115,6 @@ public class ListAnimeAPI {
     }
 
     public void updateDatabase(long numberOfValue) {
-        System.out.println("HELPER, UpdateDatabase: " + numberOfValue);
         String apiUrl = API_BASE_URL + "isupdated/" + numberOfValue;
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, apiUrl, null, new Response.Listener<JSONObject>() {

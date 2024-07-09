@@ -14,6 +14,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.File;
 
+import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
+
 public class MainActivity extends AppCompatActivity {
 
     private ViewPager2 viewPager;
@@ -28,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
 
         viewPager = findViewById(R.id.viewPager);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
+
+        BookLocalDatabase.resetDatabase(this);
 
         FragmentStateAdapter pagerAdapter = new FragmentStateAdapter(this) {
             @NonNull

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.4.0"
+agp = "8.5.0"
 compiler = "4.12.0"
 compilerVersion = "1.0.0"
 fragmentKtx = "1.6.0"

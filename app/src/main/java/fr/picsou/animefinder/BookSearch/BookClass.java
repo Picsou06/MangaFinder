@@ -11,12 +11,14 @@ public class BookClass {
     private String id;
     private String title;
     private String imageUrl;
+    private String language;
 
-    public BookClass(String id, String title, String imageUrl, String website) {
+    public BookClass(String id, String title, String imageUrl, String website, String language) {
         this.id = id;
         this.title = title;
         this.imageUrl = imageUrl;
         this.website = website;
+        this.language = language;
     }
 
     public int getPlace() {
@@ -57,5 +59,13 @@ public class BookClass {
 
     public void setWebsite(String website) {
         this.website = website;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language){
+        this.language=language;
     }
 }

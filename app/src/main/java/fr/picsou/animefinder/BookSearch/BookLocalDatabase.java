@@ -19,7 +19,7 @@ public abstract class BookLocalDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                     BookLocalDatabase.class, "book_database")
-                            .fallbackToDestructiveMigration() // Force la migration destructive
+                            .fallbackToDestructiveMigration()
                             .build();
                 }
             }
@@ -27,8 +27,18 @@ public abstract class BookLocalDatabase extends RoomDatabase {
         return INSTANCE;
     }
 
-    // Ajouter une méthode pour supprimer et recréer la base de données si nécessaire
-    public static void resetDatabase() {
-        INSTANCE = null;
+    // Ajouter une méthode pour réinitialiser la base de données si nécessaire
+    public static void resetDatabase(Context context) {
+        if (INSTANCE != null) {
+            // Fermer l'instance actuelle de la base de données
+            INSTANCE.close();
+            INSTANCE = null;
+
+            // Supprimer la base de données actuelle
+            context.deleteDatabase("book_database");
+
+            // Recréer l'instance de la base de données
+            INSTANCE = getDatabase(context);
+        }
     }
 }
