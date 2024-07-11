@@ -16,7 +16,7 @@ import fr.picsou.animefinder.R;
 
 public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.BookViewHolder> {
     private final Context mContext;
-    private final List<BookReaderClass> mBookList;
+    private List<BookReaderClass> mBookList;
     private OnBookClickListener mListener;
 
     public BookReaderAdapter(Context context, List<BookReaderClass> bookList) {
@@ -30,7 +30,7 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
     }
 
     public void updateBooks(List<BookReaderClass> newBookList) {
-        mBookList.addAll(newBookList);
+        mBookList=newBookList;
         notifyDataSetChanged();
     }
 
@@ -106,18 +106,22 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
         }
 
         public void bindFirstBook(BookReaderClass book) {
-            book1Container.setVisibility(View.VISIBLE);
-            Glide.with(itemView.getContext())
-                    .load(book.getImageCover())
-                    .into(book1Image);
+            if (book.getImageCover() != null) {
+                book1Container.setVisibility(View.VISIBLE);
+                Glide.with(itemView.getContext())
+                        .load(book.getImageCover())
+                        .into(book1Image);
+            }
             book1Title.setText(book.getTitle());
         }
 
         public void bindSecondBook(BookReaderClass book) {
-            book2Container.setVisibility(View.VISIBLE);
-            Glide.with(itemView.getContext())
-                    .load(book.getImageCover())
-                    .into(book2Image);
+            if (book.getImageCover() != null) {
+                book2Container.setVisibility(View.VISIBLE);
+                Glide.with(itemView.getContext())
+                        .load(book.getImageCover())
+                        .into(book2Image);
+            }
             book2Title.setText(book.getTitle());
         }
 

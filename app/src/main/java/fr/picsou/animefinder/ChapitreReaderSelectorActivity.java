@@ -1,10 +1,13 @@
 package fr.picsou.animefinder;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -26,13 +29,19 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chapitre_selector);
 
-        // Initialisation du Toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("");
 
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
+
+        ImageView deleteButton = new ImageView(this);
+        Toolbar.LayoutParams lp = new Toolbar.LayoutParams(Toolbar.LayoutParams.WRAP_CONTENT, Toolbar.LayoutParams.WRAP_CONTENT);
+        lp.gravity = (android.view.Gravity.END | android.view.Gravity.CENTER_VERTICAL);
+        deleteButton.setLayoutParams(lp);
+        deleteButton.setImageResource(R.drawable.ic_delete_black_24dp);
+        deleteButton.setOnClickListener(v -> deleteAnime(v));
 
         ImageView imageViewCover = findViewById(R.id.image_cover);
 
@@ -41,9 +50,11 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
             String coverUrl = args.getString("cover", "");
             String animeName = args.getString("animeName", "");
 
-            Glide.with(this)
-                    .load(coverUrl)
-                    .into(imageViewCover);
+            if (coverUrl != null && !coverUrl.isEmpty()) {
+                Glide.with(this)
+                        .load(coverUrl)
+                        .into(imageViewCover);
+            }
 
             toolbar.setTitle(animeName);
 
@@ -81,7 +92,48 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
     public void onDeleteClick(File chapter) {
         if (chapter.delete()) {
             chapterFiles.remove(chapter);
-            adapter.notifyDataSetChanged();
+            if (adapter.getItemCount()==0){
+                boolean deleted = deleteAnimeFolder();
+                if (deleted) {
+                    DownloadedListFragment.refreshBookList();
+                    finish();
+                }
+            }
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
+            }
         }
+    }
+
+    public void deleteAnime(View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Confirmation");
+        builder.setMessage("Voulez-vous vraiment supprimer cet anime ?");
+        builder.setPositiveButton("Oui", (dialog, which) -> {
+            boolean deleted = deleteAnimeFolder();
+            if (deleted) {
+                DownloadedListFragment.refreshBookList();
+                finish();
+            }
+        });
+        builder.setNegativeButton("Non", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+    private boolean deleteAnimeFolder() {
+        String animeName = Objects.requireNonNull(getSupportActionBar()).getTitle().toString();
+        File animeDir = new File(getFilesDir(), "AnimeFinder" + File.separator + animeName);
+        if (animeDir.exists() && animeDir.isDirectory()) {
+            File[] files = animeDir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (!file.delete()) {
+                        return false; // Si la suppression d'un fichier échoue
+                    }
+                }
+            }
+            return animeDir.delete(); // Supprime le dossier de l'anime
+        }
+        return false; // Si le dossier n'existe pas ou n'est pas un répertoire
     }
 }

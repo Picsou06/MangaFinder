@@ -17,6 +17,9 @@ public class BookReaderClass {
     }
 
     public String getImageCover() {
+        if (imageCover == null) {
+            return null;
+        }
         return imageCover;
     }
 
