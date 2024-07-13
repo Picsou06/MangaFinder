@@ -4,10 +4,12 @@ compiler = "4.12.0"
 compilerVersion = "1.0.0"
 fragmentKtx = "1.6.0"
 glide = "4.12.0"
+jsoup = "1.18.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 appcompat = "1.6.1"
+junrar = "7.5.0"
 kotlinxCoroutinesAndroid = "1.7.0"
 kotlinxCoroutinesCore = "1.7.0"
 material = "1.10.0"
@@ -44,10 +46,12 @@ fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragm
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "compiler" }
 jetbrains-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+junrar = { module = "com.github.junrar:junrar", version.ref = "junrar" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutinesCore" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }

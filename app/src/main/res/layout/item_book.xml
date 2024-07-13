@@ -4,7 +4,7 @@
     android:orientation="horizontal">
 
     <!-- Premier livre -->
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/book1_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -22,18 +22,29 @@
             android:maxHeight="200dp"
             android:src="@drawable/placeholder"/>
 
+        <ImageView
+            android:id="@+id/book1_flag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/french_on"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="40dp"/>
+
         <TextView
             android:id="@+id/book1_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:paddingTop="8dp"/>
+            android:paddingTop="8dp"
+            android:layout_below="@id/book1_image"/>
 
-    </LinearLayout>
+    </RelativeLayout>
 
     <!-- Deuxième livre -->
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/book2_container"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -51,14 +62,26 @@
             android:maxHeight="200dp"
             android:src="@drawable/placeholder"/>
 
+        <!-- Drapeau pour le deuxième livre -->
+        <ImageView
+            android:id="@+id/book2_flag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/french_on"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="40dp"/>
+
         <TextView
             android:id="@+id/book2_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:paddingTop="8dp"/>
+            android:paddingTop="8dp"
+            android:layout_below="@id/book2_image"/>
 
-    </LinearLayout>
+    </RelativeLayout>
 
 </LinearLayout>

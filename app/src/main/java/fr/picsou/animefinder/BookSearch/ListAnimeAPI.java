@@ -18,6 +18,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.picsou.animefinder.FinderFragment;
+
 public class ListAnimeAPI {
     private static final String API_BASE_URL = "http://Picsou06.fun:3001/";
     private final Context mContext;
@@ -54,7 +56,6 @@ public class ListAnimeAPI {
                                 // Insertion des livres dans la base de données
                                 BookLocalDatabase.getDatabase(mContext).bookDao().DeleteAllBook();
                                 BookLocalDatabase.getDatabase(mContext).bookDao().insertBooks(tempBookList);
-                                BookClass lastBook = BookLocalDatabase.getDatabase(mContext).bookDao().getLastInsertedBook();
 
                                 // Notification à l'adaptateur après l'insertion des données
                                 Activity activity = (Activity) mContext;
@@ -83,9 +84,9 @@ public class ListAnimeAPI {
         queue.add(jsonArrayRequest);
     }
 
-    public void searchBooksFromDatabase(String searchText) {
+    public void searchBooksFromDatabase(String searchText, List language) {
         new Thread(() -> {
-            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().searchBooks(searchText, "fr");
+            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().searchBooks(searchText, language);
 
             Activity activity = (Activity) mContext;
             activity.runOnUiThread(() -> {
@@ -95,9 +96,9 @@ public class ListAnimeAPI {
         }).start();
     }
 
-    public void fetchBooksFromDatabase(int limit, int offset, RecyclerView.Adapter adapter) {
+    public void fetchBooksFromDatabase(int limit, int offset, RecyclerView.Adapter adapter, List language) {
         new Thread(() -> {
-            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().getBooks(limit, offset, "fr");
+            List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().getBooks(limit, offset, language);
 
             // Mise à jour de l'interface utilisateur sur le thread principal
             Activity activity = (Activity) mContext;

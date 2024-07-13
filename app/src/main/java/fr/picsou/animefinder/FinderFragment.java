@@ -1,5 +1,6 @@
 package fr.picsou.animefinder;
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -8,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.picsou.animefinder.BookRead.BookReaderClass;
 import fr.picsou.animefinder.BookSearch.BookClass;
 import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
 import fr.picsou.animefinder.BookSearch.BookDownloaderAdapter;
@@ -31,6 +34,10 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
     private EditText searchEditText;
     private int currentPage = 0;
     private static final int PAGE_SIZE = 25;
+    private List<String> language = new ArrayList<>(List.of("en", "fr"));
+    private boolean isFrenchSelected = true;
+    private boolean isEnglishSelected = true;
+    private ImageButton frenchButton, englishButton;
 
     public FinderFragment() {
         // Required empty public constructor
@@ -63,6 +70,7 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
             listAnimeAPI.updateDatabase(count);
         });
 
+
         // Setup the EditText and TextWatcher
         searchEditText = view.findViewById(R.id.search_edit_text);
         searchEditText.addTextChangedListener(new TextWatcher() {
@@ -81,12 +89,28 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
                 String searchText = s.toString().trim();
                 if (!searchText.isEmpty()) {
                     switchToSearchAdapter();
-                    listAnimeAPI.searchBooksFromDatabase(searchText);
+                    listAnimeAPI.searchBooksFromDatabase(searchText, language);
                 } else {
                     switchToMainAdapter();
                     loadInitialData();
                 }
             }
+        });
+
+        // Setup the flag buttons
+        frenchButton = view.findViewById(R.id.french_button);
+        englishButton = view.findViewById(R.id.english_button);
+
+        frenchButton.setOnClickListener(v -> {
+            isFrenchSelected = !isFrenchSelected;
+            frenchButton.setImageResource(isFrenchSelected ? R.drawable.french_on : R.drawable.french_off);
+            updateLanguageList();
+        });
+
+        englishButton.setOnClickListener(v -> {
+            isEnglishSelected = !isEnglishSelected;
+            englishButton.setImageResource(isEnglishSelected ? R.drawable.english_on : R.drawable.english_off);
+            updateLanguageList();
         });
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -104,7 +128,7 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
             }
         });
 
-        loadInitialData();
+        updatelocalData();
     }
 
     private void loadInitialData() {
@@ -116,9 +140,16 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
         });
     }
 
+    private void updatelocalData(){
+        currentPage=0;
+        mAdapter.clearBooks();
+        listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, 0, mAdapter, language);
+        mAdapter.notifyDataSetChanged();
+    }
+
     private void loadMoreData() {
         int offset = currentPage * PAGE_SIZE;
-        listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, offset, mAdapter);
+        listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, offset, mAdapter, language);
         currentPage++;
     }
 
@@ -134,8 +165,33 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
         searchAdapter.notifyDataSetChanged();
     }
 
-    @Override
+    private void updateLanguageList() {
+        language.clear();
+        if (isFrenchSelected) {
+            language.add("fr");
+        }
+        if (isEnglishSelected) {
+            language.add("en");
+        }
+        String searchText = searchEditText.getText().toString().trim();
+        if (!searchText.isEmpty()) {
+            switchToSearchAdapter();
+            listAnimeAPI.searchBooksFromDatabase(searchText, language);
+        } else {
+            switchToMainAdapter();
+            loadInitialData();
+        }
+        updatelocalData();
+        mAdapter.notifyDataSetChanged();
+        searchAdapter.notifyDataSetChanged();
+    }
+
     public void onBookClick(BookClass book) {
-        System.out.println(book.getId());
+        Intent intent = new Intent(getActivity(), ChapitreFinderSelectorActivity.class);
+        intent.putExtra("cover", book.getImageUrl());
+        intent.putExtra("animeName", book.getTitle());
+        intent.putExtra("id", book.getId());
+        intent.putExtra("language", book.getLanguage());
+        startActivity(intent);
     }
 }

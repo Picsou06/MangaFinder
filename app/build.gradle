@@ -52,6 +52,7 @@ dependencies {
     implementation libs.navigation.fragment
     implementation libs.navigation.ui
     implementation libs.lifecycle.viewmodel.ktx
+    implementation libs.junrar
     implementation libs.fragment.ktx
     implementation libs.androidx.lifecycle.runtime.ktx
     implementation libs.androidx.lifecycle.livedata.ktx
@@ -64,11 +65,12 @@ dependencies {
     implementation libs.androidx.room.runtime
     implementation libs.kotlinx.coroutines.core
     implementation libs.jetbrains.kotlinx.coroutines.android
-
-    annotationProcessor libs.androidx.room.compiler
     implementation libs.glide
+    implementation libs.jsoup
     implementation libs.volley
+    annotationProcessor libs.androidx.room.compiler
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
+    annotationProcessor libs.glide.compiler
 }

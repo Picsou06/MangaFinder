@@ -1,13 +1,16 @@
 package fr.picsou.animefinder;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import androidx.appcompat.widget.Toolbar;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -15,15 +18,18 @@ import com.bumptech.glide.Glide;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import fr.picsou.animefinder.BookRead.ChapterAdapter;
+import fr.picsou.animefinder.BookRead.ChapterReaderAdapter;
+import fr.picsou.animefinder.BookRead.MangaViewer;
 
-public class ChapitreReaderSelectorActivity extends AppCompatActivity implements ChapterAdapter.OnChapterClickListener {
-    private ChapterAdapter adapter;
+public class ChapitreReaderSelectorActivity extends AppCompatActivity implements ChapterReaderAdapter.OnChapterClickListener {
+    private ChapterReaderAdapter adapter;
     private List<File> chapterFiles;
 
+    @SuppressLint("ResourceType")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,12 +42,20 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
 
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
-        ImageView deleteButton = new ImageView(this);
-        Toolbar.LayoutParams lp = new Toolbar.LayoutParams(Toolbar.LayoutParams.WRAP_CONTENT, Toolbar.LayoutParams.WRAP_CONTENT);
-        lp.gravity = (android.view.Gravity.END | android.view.Gravity.CENTER_VERTICAL);
-        deleteButton.setLayoutParams(lp);
+        // Create the delete button programmatically
+        ImageButton deleteButton = new ImageButton(this);
+        deleteButton.setId(View.generateViewId());
         deleteButton.setImageResource(R.drawable.ic_delete_black_24dp);
-        deleteButton.setOnClickListener(v -> deleteAnime(v));
+        deleteButton.setBackgroundColor(getResources().getColor(R.color.recherche));
+        Toolbar.LayoutParams layoutParams = new Toolbar.LayoutParams(
+                Toolbar.LayoutParams.WRAP_CONTENT,
+                Toolbar.LayoutParams.WRAP_CONTENT,
+                Gravity.END | Gravity.CENTER_VERTICAL
+        );
+        layoutParams.setMarginEnd(10);
+        deleteButton.setPadding(8, 8, 8, 8);
+        deleteButton.setOnClickListener(this::deleteAnime);
+        toolbar.addView(deleteButton, layoutParams);
 
         ImageView imageViewCover = findViewById(R.id.image_cover);
 
@@ -63,7 +77,7 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
             RecyclerView recyclerView = findViewById(R.id.list_chapters);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-            adapter = new ChapterAdapter(this, chapterFiles, this);
+            adapter = new ChapterReaderAdapter(this, chapterFiles, this);
             recyclerView.setAdapter(adapter);
         }
     }
@@ -74,9 +88,7 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
         if (animeDir.exists() && animeDir.isDirectory()) {
             File[] files = animeDir.listFiles((dir, name) -> name.endsWith(".cbz"));
             if (files != null) {
-                for (File file : files) {
-                    chapters.add(file);
-                }
+                Collections.addAll(chapters, files);
             }
         }
         return chapters;
@@ -85,14 +97,20 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
     @Override
     public void onChapterClick(File chapter) {
         String chapterName = chapter.getName();
+        String chapterPath = chapter.getAbsolutePath();
         System.out.println("HELPER, " + chapterName);
+        Intent intent = new Intent(ChapitreReaderSelectorActivity.this, MangaViewer.class);
+        intent.putExtra("MANGA_NAME", chapterName);
+        intent.putExtra("CBZ_FILE_PATH", chapterPath);
+        startActivity(intent);
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onDeleteClick(File chapter) {
         if (chapter.delete()) {
             chapterFiles.remove(chapter);
-            if (adapter.getItemCount()==0){
+            if (adapter.getItemCount() == 0) {
                 boolean deleted = deleteAnimeFolder();
                 if (deleted) {
                     DownloadedListFragment.refreshBookList();
@@ -128,12 +146,12 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
             if (files != null) {
                 for (File file : files) {
                     if (!file.delete()) {
-                        return false; // Si la suppression d'un fichier échoue
+                        return false;
                     }
                 }
             }
-            return animeDir.delete(); // Supprime le dossier de l'anime
+            return animeDir.delete();
         }
-        return false; // Si le dossier n'existe pas ou n'est pas un répertoire
+        return false;
     }
 }

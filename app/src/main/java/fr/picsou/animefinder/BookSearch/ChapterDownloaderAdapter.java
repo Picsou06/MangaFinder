@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookRead;
+package fr.picsou.animefinder.BookSearch;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -10,22 +10,23 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.File;
 import java.util.List;
 
+import fr.picsou.animefinder.ChapitreFinderSelectorActivity;
+import fr.picsou.animefinder.Connector.MangaFireConnector;
 import fr.picsou.animefinder.R;
 
-public class ChapterAdapter extends RecyclerView.Adapter<ChapterAdapter.ViewHolder> {
-    private final List<File> chapters;
+public class ChapterDownloaderAdapter extends RecyclerView.Adapter<ChapterDownloaderAdapter.ViewHolder> {
+    private final List<MangaFireConnector.Chapter> chapters;
     private final Context context;
     private final OnChapterClickListener listener;
 
     public interface OnChapterClickListener {
-        void onChapterClick(File chapter);
-        void onDeleteClick(File chapter);
+        void onChapterClick(MangaFireConnector.Chapter chapter);
+        void onDownloadClick(MangaFireConnector.Chapter chapter);
     }
 
-    public ChapterAdapter(Context context, List<File> chapters, OnChapterClickListener listener) {
+    public ChapterDownloaderAdapter(Context context, List<MangaFireConnector.Chapter> chapters, ChapitreFinderSelectorActivity listener) {
         this.context = context;
         this.chapters = chapters;
         this.listener = listener;
@@ -40,11 +41,12 @@ public class ChapterAdapter extends RecyclerView.Adapter<ChapterAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        File chapter = chapters.get(position);
-        holder.chapterName.setText(chapter.getName());
+        MangaFireConnector.Chapter chapter = chapters.get(position);
+        holder.chapterName.setText(chapter.getTitle());
 
+        holder.actionbutton.setImageResource(R.drawable.ic_download_black);
         holder.itemView.setOnClickListener(v -> listener.onChapterClick(chapter));
-        holder.deleteButton.setOnClickListener(v -> listener.onDeleteClick(chapter));
+        holder.actionbutton.setOnClickListener(v -> listener.onDownloadClick(chapter));
     }
 
     @Override
@@ -54,12 +56,12 @@ public class ChapterAdapter extends RecyclerView.Adapter<ChapterAdapter.ViewHold
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView chapterName;
-        public ImageButton deleteButton;
+        public ImageButton actionbutton;
 
         public ViewHolder(View itemView) {
             super(itemView);
             chapterName = itemView.findViewById(R.id.chapter_name);
-            deleteButton = itemView.findViewById(R.id.button_delete);
+            actionbutton = itemView.findViewById(R.id.action_button);
         }
     }
 }

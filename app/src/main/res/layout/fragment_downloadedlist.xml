@@ -24,7 +24,7 @@
         android:id="@+id/btn_open_anime_finder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_download"
+        android:src="@drawable/ic_download_white"
         android:background="?attr/selectableItemBackground"
         android:contentDescription="Ouvrir menu d'importation"
         android:layout_alignParentEnd="true"

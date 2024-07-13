@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -86,9 +87,10 @@ public class BookDownloaderAdapter extends RecyclerView.Adapter<BookDownloaderAd
     }
 
     public static class BookViewHolder extends RecyclerView.ViewHolder {
-        LinearLayout book1Container, book2Container;
+        RelativeLayout book1Container, book2Container;
         ImageView book1Image, book2Image;
         TextView book1Title, book2Title;
+        ImageView book1_flag, book2_flag;
 
         public BookViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -98,6 +100,8 @@ public class BookDownloaderAdapter extends RecyclerView.Adapter<BookDownloaderAd
             book1Title = itemView.findViewById(R.id.book1_title);
             book2Image = itemView.findViewById(R.id.book2_image);
             book2Title = itemView.findViewById(R.id.book2_title);
+            book1_flag = itemView.findViewById(R.id.book1_flag);
+            book2_flag = itemView.findViewById(R.id.book2_flag);
         }
 
         public void bindFirstBook(BookClass book) {
@@ -106,6 +110,7 @@ public class BookDownloaderAdapter extends RecyclerView.Adapter<BookDownloaderAd
                     .load(book.getImageUrl())
                     .into(book1Image);
             book1Title.setText(book.getTitle());
+            book1_flag.setImageResource(book.getLanguage().equals("fr") ? R.drawable.french_on : R.drawable.english_on);
         }
 
         public void bindSecondBook(BookClass book) {
@@ -114,6 +119,7 @@ public class BookDownloaderAdapter extends RecyclerView.Adapter<BookDownloaderAd
                     .load(book.getImageUrl())
                     .into(book2Image);
             book2Title.setText(book.getTitle());
+            book2_flag.setImageResource(book.getLanguage().equals("fr") ? R.drawable.french_on : R.drawable.english_on);
         }
 
         public void hideSecondBook() {

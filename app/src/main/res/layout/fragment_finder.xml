@@ -26,6 +26,23 @@
             android:background="@android:color/transparent"
             android:inputType="text" />
 
+        <ImageButton
+            android:id="@+id/french_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/french_on"
+            android:contentDescription="French"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp" />
+
+        <ImageButton
+            android:id="@+id/english_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/english_on"
+            android:contentDescription="English"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp" />
 
         <ImageButton
             android:id="@+id/search_button"

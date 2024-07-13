@@ -40,14 +40,17 @@ public class DownloadedListFragment extends Fragment {
     private TextView textViewSelectedFile;
     private static DownloadedListFragment instance;
     private File selectedFile;
+    private RecyclerView recyclerView; // Declare the RecyclerView here
+    private List<BookReaderClass> bookList;
+    private View view;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         instance = this;
-        View view = inflater.inflate(R.layout.fragment_downloadedlist, container, false);
+        view = inflater.inflate(R.layout.fragment_downloadedlist, container, false);
 
-        RecyclerView recyclerView = view.findViewById(R.id.recycler_view_books);
+        recyclerView = view.findViewById(R.id.recycler_view_books); // Initialize the RecyclerView
         TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
         ImageButton btnOpenAnimeFinder = view.findViewById(R.id.btn_open_anime_finder);
         importMenuLayout = view.findViewById(R.id.import_menu_layout);
@@ -64,7 +67,7 @@ public class DownloadedListFragment extends Fragment {
         });
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        List<BookReaderClass> bookList = getListOfBooks();
+        bookList = getListOfBooks();
 
         if (bookList == null || bookList.isEmpty()) {
             textViewEmpty.setVisibility(View.VISIBLE);
@@ -85,7 +88,6 @@ public class DownloadedListFragment extends Fragment {
         }
 
         btnChooseFile.setOnClickListener(this::onChooseFileClick);
-
         btnImport.setOnClickListener(this::onImportClick);
 
         return view;
@@ -199,7 +201,8 @@ public class DownloadedListFragment extends Fragment {
             e.printStackTrace();
             Toast.makeText(getContext(), "Erreur lors de l'importation du fichier.", Toast.LENGTH_SHORT).show();
         }
-
+        System.out.println("HELPER, fichier importé!");
+        refreshBookListInternal();
     }
 
     private void copyFile(File sourceFile, File destFile) throws IOException {
@@ -216,9 +219,37 @@ public class DownloadedListFragment extends Fragment {
     }
 
     private void refreshBookListInternal() {
+        bookList = getListOfBooks();
+        TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
+        if (bookList == null || bookList.isEmpty()) {
+            textViewEmpty.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            textViewEmpty.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+
+            bookAdapter = new BookReaderAdapter(getContext(), bookList);
+            recyclerView.setAdapter(bookAdapter);
+
+            bookAdapter.setOnBookClickListener(new BookReaderAdapter.OnBookClickListener() {
+                @Override
+                public void onBookClick(BookReaderClass book) {
+                    openChapitreSelectorActivity(book);
+                }
+            });
+        }
+        System.out.println("HELPER, Folder Updated");
+
         List<BookReaderClass> bookList = getListOfBooks();
+        System.out.println("HELPER, " + bookList.toString());
+
         if (bookAdapter != null) {
+            bookAdapter.clearBooks();
             bookAdapter.updateBooks(bookList);
+            bookAdapter.notifyDataSetChanged();
+        } else {
+            bookAdapter = new BookReaderAdapter(getContext(), bookList);
+            recyclerView.setAdapter(bookAdapter); // Set the adapter here if it's not set
         }
     }
 
@@ -228,6 +259,7 @@ public class DownloadedListFragment extends Fragment {
         intent.putExtra("animeName", book.getTitle());
         startActivity(intent);
     }
+
     private List<BookReaderClass> getListOfBooks() {
         List<BookReaderClass> bookList = new ArrayList<>();
 
@@ -260,7 +292,7 @@ public class DownloadedListFragment extends Fragment {
     private int getNumberOfPages(File folder) {
         File[] files = folder.listFiles();
         if (files != null) {
-            return files.length - 1;
+            return files.length - 1; // Assuming cover.jpg is not counted as a page
         }
         return 0;
     }

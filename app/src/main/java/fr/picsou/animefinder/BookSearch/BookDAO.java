@@ -13,11 +13,11 @@ public interface BookDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertBooks(List<BookClass> books);
 
-    @Query("SELECT * FROM books WHERE title LIKE '%' || :searchText || '%' AND language=:language")
-    List<BookClass> searchBooks(String searchText, String language);
+    @Query("SELECT * FROM books WHERE title LIKE '%' || :searchText || '%' AND language IN (:languages) ORDER BY title")
+    List<BookClass> searchBooks(String searchText, List<String> languages);
 
-    @Query("SELECT * FROM books WHERE language=:language")
-    List<BookClass> getAllBooks(String language);
+    @Query("SELECT * FROM books WHERE language IN (:languages) ORDER BY title")
+    List<BookClass> getAllBooks(List<String> languages);
 
     @Query("DELETE FROM books")
     void DeleteAllBook();
@@ -25,9 +25,6 @@ public interface BookDAO {
     @Query("SELECT count(id) AS NBOFBOOKS FROM books")
     long CountValue();
 
-    @Query("SELECT * FROM books WHERE language=:language LIMIT :limit OFFSET :offset")
-    List<BookClass> getBooks(int limit, int offset, String language);
-
-    @Query("SELECT * FROM books ORDER BY place DESC LIMIT 1")
-    BookClass getLastInsertedBook();
+    @Query("SELECT * FROM books WHERE language IN (:languages) ORDER BY title LIMIT :limit OFFSET :offset")
+    List<BookClass> getBooks(int limit, int offset, List<String> languages);
 }

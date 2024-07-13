@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -51,13 +52,20 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
         int firstBookIndex = position * 2;
         int secondBookIndex = firstBookIndex + 1;
 
+        System.out.println("Binding books at position: " + position);
+        System.out.println("First book index: " + firstBookIndex);
+        System.out.println("Second book index: " + secondBookIndex);
+
         if (firstBookIndex < mBookList.size()) {
             holder.bindFirstBook(mBookList.get(firstBookIndex));
         }
 
         if (secondBookIndex < mBookList.size()) {
+            System.out.println("HELPER, Bind Second Book");
             holder.bindSecondBook(mBookList.get(secondBookIndex));
+            holder.showSecondBook();
         } else {
+            System.out.println("HELPER, Hide Second Book");
             holder.hideSecondBook();
         }
 
@@ -91,7 +99,7 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
     }
 
     public static class BookViewHolder extends RecyclerView.ViewHolder {
-        LinearLayout book1Container, book2Container;
+        RelativeLayout book1Container, book2Container;
         ImageView book1Image, book2Image;
         TextView book1Title, book2Title;
 
@@ -127,6 +135,10 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
 
         public void hideSecondBook() {
             book2Container.setVisibility(View.INVISIBLE);
+        }
+
+        public void showSecondBook() {
+            book2Container.setVisibility(View.VISIBLE);
         }
     }
 }
