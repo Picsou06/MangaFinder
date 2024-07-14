@@ -1,9 +1,11 @@
 package fr.picsou.animefinder;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
@@ -26,6 +28,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.FileChannel;
@@ -34,7 +37,9 @@ import java.util.List;
 
 import fr.picsou.animefinder.BookRead.BookReaderAdapter;
 import fr.picsou.animefinder.BookRead.BookReaderClass;
+import fr.picsou.animefinder.BookSearch.BookClass;
 import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
+import fr.picsou.animefinder.BookSearch.BookSearchAdapter;
 
 public class DownloadedListFragment extends Fragment {
 
@@ -205,36 +210,81 @@ public class DownloadedListFragment extends Fragment {
             e.printStackTrace();
             Toast.makeText(getContext(), "Erreur lors de l'importation du fichier.", Toast.LENGTH_SHORT).show();
         }
-        String imageCoverLink = BookLocalDatabase.getDatabase(getContext()).bookDao().getPicture(animeName);
-        if (imageCoverLink != null) {
-            try {
-                URL url = new URL(imageCoverLink);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.connect();
 
-                File coverFile = new File(animeFolder, "cover.jpg");
+        // Thread pour télécharger l'image de couverture
+        Thread downloadThread = new Thread(() -> {
+            String imageCoverLink = BookLocalDatabase.getDatabase(getContext()).bookDao().getPicture(animeName);
 
-                FileOutputStream outputStream = new FileOutputStream(coverFile);
-                InputStream inputStream = connection.getInputStream();
+            if (imageCoverLink != null) {
+                try {
+                    URL url = new URL(imageCoverLink);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.connect();
 
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
+                    File coverFile = new File(animeFolder, "cover.jpg");
+
+                    FileOutputStream outputStream = new FileOutputStream(coverFile);
+                    InputStream inputStream = connection.getInputStream();
+
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+
+                    inputStream.close();
+                    outputStream.close();
+
+                    // Retourner sur le thread principal pour afficher un Toast
+                    getActivity().runOnUiThread(() -> {
+                        Toast.makeText(getContext(), "Image de couverture téléchargée et sauvegardée.", Toast.LENGTH_SHORT).show();
+                    });
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    // Retourner sur le thread principal pour afficher un Toast
+                    getActivity().runOnUiThread(() -> {
+                        Toast.makeText(getContext(), "Erreur lors du téléchargement de l'image de couverture.", Toast.LENGTH_SHORT).show();
+                    });
                 }
-
-                inputStream.close();
-                outputStream.close();
-
-                Toast.makeText(getContext(), "Image de couverture téléchargée et sauvegardée.", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(getContext(), "Erreur lors du téléchargement de l'image de couverture.", Toast.LENGTH_SHORT).show();
             }
+            System.out.println("HELPER, image ajoutée!");
+        });
+
+        // Démarrer le thread de téléchargement
+        downloadThread.start();
+
+        try {
+            // Attendre que le thread de téléchargement soit terminé
+            downloadThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
+        // Suite du code après que le téléchargement soit terminé
         System.out.println("HELPER, fichier importé!");
         refreshBookListInternal();
     }
+
+
+    private static class GetPictureAsyncTask extends AsyncTask<String, Void, String> {
+
+        private WeakReference<Context> contextRef;
+
+        GetPictureAsyncTask(Context context) {
+            contextRef = new WeakReference<>(context);
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            Context context = contextRef.get();
+            if (context == null) return null;
+
+            String animeName = params[0];
+            return BookLocalDatabase.getDatabase(context).bookDao().getPicture(animeName);
+        }
+    }
+
 
     private void copyFile(File sourceFile, File destFile) throws IOException {
         try (FileChannel source = new FileInputStream(sourceFile).getChannel();
