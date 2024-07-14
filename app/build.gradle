@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'fr.picsou.animefinder'
+    namespace 'fr.picsou.mangafinder'
     compileSdk 34
 
     defaultConfig {
-        applicationId "fr.picsou.animefinder"
+        applicationId "fr.picsou.mangafinder"
         minSdk 24
         targetSdk 34
         versionCode 1

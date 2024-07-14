@@ -1,7 +1,6 @@
-package fr.picsou.animefinder;
+package fr.picsou.mangafinder;
 
 import android.os.Bundle;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,14 +10,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import fr.picsou.animefinder.BookRead.ChapterReaderAdapter;
-import fr.picsou.animefinder.BookSearch.ChapterDownloaderAdapter;
-import fr.picsou.animefinder.Connector.MangaFireConnector;
+import fr.picsou.mangafinder.BookSearch.ChapterDownloaderAdapter;
+import fr.picsou.mangafinder.Connector.MangaFireConnector;
 
 public class ChapitreFinderSelectorActivity extends AppCompatActivity implements ChapterDownloaderAdapter.OnChapterClickListener {
 

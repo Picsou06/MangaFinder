@@ -1,4 +1,4 @@
-package fr.picsou.animefinder;
+package fr.picsou.mangafinder;
 
 import androidx.fragment.app.Fragment;
 

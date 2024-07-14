@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookRead;
+package fr.picsou.mangafinder.BookRead;
 
 
 public class BookReaderClass {

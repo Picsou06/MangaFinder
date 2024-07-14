@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookSearch;
+package fr.picsou.mangafinder.BookSearch;
 
 import android.content.Context;
 import android.util.Log;
@@ -6,25 +6,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
-
 import java.util.List;
+import fr.picsou.mangafinder.R;
 
-import fr.picsou.animefinder.R;
-
-public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.BookViewHolder> {
+public class BookDownloaderAdapter extends RecyclerView.Adapter<BookDownloaderAdapter.BookViewHolder> {
     private final Context mContext;
     private final List<BookClass> mBookList;
     private OnBookClickListener mListener;
 
-    public BookSearchAdapter(Context context, List<BookClass> bookList) {
+    public BookDownloaderAdapter(Context context, List<BookClass> bookList) {
         mContext = context;
         mBookList = bookList;
     }
@@ -62,7 +57,6 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
 
         if (secondBookIndex < mBookList.size()) {
             holder.bindSecondBook(mBookList.get(secondBookIndex));
-            holder.book2Container.setVisibility(View.VISIBLE);
         } else {
             holder.hideSecondBook();
         }

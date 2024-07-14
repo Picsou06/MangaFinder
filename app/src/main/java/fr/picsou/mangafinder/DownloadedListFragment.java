@@ -1,4 +1,4 @@
-package fr.picsou.animefinder;
+package fr.picsou.mangafinder;
 
 import android.app.Activity;
 import android.content.Context;
@@ -35,11 +35,9 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.picsou.animefinder.BookRead.BookReaderAdapter;
-import fr.picsou.animefinder.BookRead.BookReaderClass;
-import fr.picsou.animefinder.BookSearch.BookClass;
-import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
-import fr.picsou.animefinder.BookSearch.BookSearchAdapter;
+import fr.picsou.mangafinder.BookRead.BookReaderAdapter;
+import fr.picsou.mangafinder.BookRead.BookReaderClass;
+import fr.picsou.mangafinder.BookSearch.BookLocalDatabase;
 
 public class DownloadedListFragment extends Fragment {
 
@@ -61,14 +59,14 @@ public class DownloadedListFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recycler_view_books); // Initialize the RecyclerView
         TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
-        ImageButton btnOpenAnimeFinder = view.findViewById(R.id.btn_open_anime_finder);
+        ImageButton btnOpenMangaFinder = view.findViewById(R.id.btn_open_anime_finder);
         importMenuLayout = view.findViewById(R.id.import_menu_layout);
         editTextAnimeName = view.findViewById(R.id.edit_text_anime_name);
         Button btnChooseFile = view.findViewById(R.id.btn_choose_file);
         textViewSelectedFile = view.findViewById(R.id.text_view_selected_file);
         Button btnImport = view.findViewById(R.id.btn_import);
 
-        btnOpenAnimeFinder.setOnClickListener(new View.OnClickListener() {
+        btnOpenMangaFinder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleImportMenu();
@@ -195,7 +193,7 @@ public class DownloadedListFragment extends Fragment {
             return;
         }
 
-        File animeFolder = new File(getActivity().getFilesDir(), "AnimeFinder/" + animeName);
+        File animeFolder = new File(getActivity().getFilesDir(), "MangaFinder/" + animeName);
         if (!animeFolder.exists()) {
             animeFolder.mkdirs();
         }
@@ -344,9 +342,9 @@ public class DownloadedListFragment extends Fragment {
     private List<BookReaderClass> getListOfBooks() {
         List<BookReaderClass> bookList = new ArrayList<>();
 
-        File animeFinderDir = new File(getActivity().getFilesDir(), "AnimeFinder");
-        if (animeFinderDir.exists() && animeFinderDir.isDirectory()) {
-            File[] animeFolders = animeFinderDir.listFiles(File::isDirectory);
+        File MangaFinderDir = new File(getActivity().getFilesDir(), "MangaFinder");
+        if (MangaFinderDir.exists() && MangaFinderDir.isDirectory()) {
+            File[] animeFolders = MangaFinderDir.listFiles(File::isDirectory);
 
             if (animeFolders != null) {
                 for (File folder : animeFolders) {

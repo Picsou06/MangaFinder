@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("fr.picsou.animefinder", appContext.getPackageName());
+        assertEquals("fr.picsou.mangafinder", appContext.getPackageName());
     }
 }

@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookSearch;
+package fr.picsou.mangafinder.BookSearch;
 
 import android.app.Activity;
 import android.content.Context;
@@ -17,8 +17,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
-
-import fr.picsou.animefinder.FinderFragment;
 
 public class ListAnimeAPI {
     private static final String API_BASE_URL = "http://Picsou06.fun:3001/";

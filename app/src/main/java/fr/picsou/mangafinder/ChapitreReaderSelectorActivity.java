@@ -1,4 +1,4 @@
-package fr.picsou.animefinder;
+package fr.picsou.mangafinder;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import fr.picsou.animefinder.BookRead.ChapterReaderAdapter;
-import fr.picsou.animefinder.BookRead.MangaViewer;
+import fr.picsou.mangafinder.BookRead.ChapterReaderAdapter;
+import fr.picsou.mangafinder.BookRead.MangaViewer;
 
 public class ChapitreReaderSelectorActivity extends AppCompatActivity implements ChapterReaderAdapter.OnChapterClickListener {
     private ChapterReaderAdapter adapter;
@@ -84,7 +84,7 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
 
     private List<File> getChapterFiles(String animeName) {
         List<File> chapters = new ArrayList<>();
-        File animeDir = new File(getFilesDir(), "AnimeFinder" + File.separator + animeName);
+        File animeDir = new File(getFilesDir(), "MangaFinder" + File.separator + animeName);
         if (animeDir.exists() && animeDir.isDirectory()) {
             File[] files = animeDir.listFiles((dir, name) -> name.endsWith(".cbz"));
             if (files != null) {
@@ -140,7 +140,7 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
 
     private boolean deleteAnimeFolder() {
         String animeName = Objects.requireNonNull(getSupportActionBar()).getTitle().toString();
-        File animeDir = new File(getFilesDir(), "AnimeFinder" + File.separator + animeName);
+        File animeDir = new File(getFilesDir(), "MangaFinder" + File.separator + animeName);
         if (animeDir.exists() && animeDir.isDirectory()) {
             File[] files = animeDir.listFiles();
             if (files != null) {

@@ -1,4 +1,4 @@
-package fr.picsou.animefinder;
+package fr.picsou.mangafinder;
 
 import org.junit.Test;
 

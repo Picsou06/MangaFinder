@@ -1,4 +1,4 @@
-package fr.picsou.animefinder;
+package fr.picsou.mangafinder;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,8 +14,6 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.File;
 
-import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
-
 public class MainActivity extends AppCompatActivity {
 
     private ViewPager2 viewPager;
@@ -26,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        createAnimeFinderFolder();
+        createMangaFinderFolder();
 
         viewPager = findViewById(R.id.viewPager);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
@@ -85,13 +83,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    private void createAnimeFinderFolder() {
-        File animeFinderDir = new File(getFilesDir(), "AnimeFinder");
-        if (!animeFinderDir.exists()) {
-            if (animeFinderDir.mkdir()) {
-                Toast.makeText(getBaseContext(), "Dossier AnimeFinder créé avec succès.", Toast.LENGTH_SHORT).show();
+    private void createMangaFinderFolder() {
+        File MangaFinderDir = new File(getFilesDir(), "MangaFinder");
+        if (!MangaFinderDir.exists()) {
+            if (MangaFinderDir.mkdir()) {
+                Toast.makeText(getBaseContext(), "Dossier MangaFinder créé avec succès.", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(getBaseContext(), "Échec de la création du dossier AnimeFinder.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getBaseContext(), "Échec de la création du dossier MangaFinder.", Toast.LENGTH_SHORT).show();
             }
         }
     }

@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookSearch;
+package fr.picsou.mangafinder.BookSearch;
 
 import androidx.room.Dao;
 import androidx.room.Insert;

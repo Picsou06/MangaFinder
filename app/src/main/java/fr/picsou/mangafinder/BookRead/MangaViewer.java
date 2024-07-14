@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookRead;
+package fr.picsou.mangafinder.BookRead;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -18,7 +18,7 @@ import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import fr.picsou.animefinder.R;
+import fr.picsou.mangafinder.R;
 
 public class MangaViewer extends AppCompatActivity {
 

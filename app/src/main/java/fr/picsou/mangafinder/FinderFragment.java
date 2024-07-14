@@ -1,4 +1,4 @@
-package fr.picsou.animefinder;
+package fr.picsou.mangafinder;
 
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -20,12 +20,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.picsou.animefinder.BookRead.BookReaderClass;
-import fr.picsou.animefinder.BookSearch.BookClass;
-import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
-import fr.picsou.animefinder.BookSearch.BookDownloaderAdapter;
-import fr.picsou.animefinder.BookSearch.BookSearchAdapter;
-import fr.picsou.animefinder.BookSearch.ListAnimeAPI;
+import fr.picsou.mangafinder.BookSearch.BookClass;
+import fr.picsou.mangafinder.BookSearch.BookLocalDatabase;
+import fr.picsou.mangafinder.BookSearch.BookDownloaderAdapter;
+import fr.picsou.mangafinder.BookSearch.BookSearchAdapter;
+import fr.picsou.mangafinder.BookSearch.ListAnimeAPI;
 
 public class FinderFragment extends Fragment implements BookDownloaderAdapter.OnBookClickListener, BookSearchAdapter.OnBookClickListener {
     private ListAnimeAPI listAnimeAPI;

@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookSearch;
+package fr.picsou.mangafinder.BookSearch;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;

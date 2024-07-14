@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AnimeFinder</string>
+    <string name="app_name">MangaFinder</string>
     <string name="bottom_navigation_menu_recherche">Finder</string>
     <string name="bottom_navigation_menu_reader">Reader</string>
     <string name="search">Search</string>

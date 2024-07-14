@@ -1,4 +1,4 @@
-package fr.picsou.animefinder.BookRead;
+package fr.picsou.mangafinder.BookRead;
 
 import android.content.Context;
 import android.util.Log;
@@ -6,14 +6,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import java.util.List;
-import fr.picsou.animefinder.R;
+import fr.picsou.mangafinder.R;
 
 public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.BookViewHolder> {
     private final Context mContext;
