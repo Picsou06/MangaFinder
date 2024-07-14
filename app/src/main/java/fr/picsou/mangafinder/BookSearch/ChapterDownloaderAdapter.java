@@ -23,7 +23,7 @@ public class ChapterDownloaderAdapter extends RecyclerView.Adapter<ChapterDownlo
 
     public interface OnChapterClickListener {
         void onChapterClick(MangaFireConnector.Chapter chapter);
-        void onDownloadClick(MangaFireConnector.Chapter chapter);
+        void onDownloadClick(MangaFireConnector.Chapter chapter, String mangaTitle);
     }
 
     public ChapterDownloaderAdapter(Context context, List<MangaFireConnector.Chapter> chapters, ChapitreFinderSelectorActivity listener) {
@@ -46,7 +46,7 @@ public class ChapterDownloaderAdapter extends RecyclerView.Adapter<ChapterDownlo
 
         holder.actionbutton.setImageResource(R.drawable.ic_download_black);
         holder.itemView.setOnClickListener(v -> listener.onChapterClick(chapter));
-        holder.actionbutton.setOnClickListener(v -> listener.onDownloadClick(chapter));
+        holder.actionbutton.setOnClickListener(v -> listener.onDownloadClick(chapter, holder.chapterName.getText().toString()));
     }
 
     @Override

@@ -2,6 +2,7 @@ package fr.picsou.mangafinder;
 
 import android.os.Bundle;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 import fr.picsou.mangafinder.BookSearch.ChapterDownloaderAdapter;
+import fr.picsou.mangafinder.BookSearch.DownloadJob;
 import fr.picsou.mangafinder.Connector.MangaFireConnector;
 
 public class ChapitreFinderSelectorActivity extends AppCompatActivity implements ChapterDownloaderAdapter.OnChapterClickListener {
@@ -59,11 +61,11 @@ public class ChapitreFinderSelectorActivity extends AppCompatActivity implements
             adapter = new ChapterDownloaderAdapter(this, mangaChapters, this);
             recyclerView.setAdapter(adapter);
 
-            loadChapters(id);
+            loadChapters(id, animeName, coverUrl);
         }
     }
 
-    private void loadChapters(String mangaId) {
+    private void loadChapters(String mangaId, String mangaName, String imageURL) {
         MangaFireConnector.MangaFire_getChapters(mangaId, new MangaFireConnector.GetChaptersCallback() {
             @Override
             public void onChaptersLoaded(List<MangaFireConnector.Chapter> loadedChapters) {
@@ -71,22 +73,33 @@ public class ChapitreFinderSelectorActivity extends AppCompatActivity implements
                 mangaChapters.addAll(loadedChapters);
                 adapter.notifyDataSetChanged();
             }
-        }, language);
+        }, language, mangaName, imageURL);
     }
 
     @Override
     public void onChapterClick(MangaFireConnector.Chapter chapter) {
+        System.out.println("HELPER, "+chapter.getId()+ " " + chapter.getTitle());
     }
 
     @Override
-    public void onDownloadClick(MangaFireConnector.Chapter chapter) {
-        System.out.println("HELPER, "+chapter.getId()+ " " + chapter.getTitle());
-        MangaFireConnector.MangaFire_getPages(chapter.getId(), new MangaFireConnector.GetPagesCallback() {
+    public void onDownloadClick(MangaFireConnector.Chapter chapter, String mangaTitle) {
+        DownloadJob downloadJob = new DownloadJob(chapter, language, new DownloadJob.DownloadCallback() {
             @Override
-            public void onPagesLoaded(List<String> pages) {
-                System.out.println("HELPER,"+pages.toString());
-                System.out.println("HELPER,"+pages.get(0).toString());
+            public void onDownloadCompleted() {
+                runOnUiThread(() -> {
+                    Toast.makeText(ChapitreFinderSelectorActivity.this, "Download completed", Toast.LENGTH_SHORT).show();
+                });
             }
-        });
+
+            @Override
+            public void onDownloadFailed(String message) {
+                runOnUiThread(() -> {
+                    Toast.makeText(ChapitreFinderSelectorActivity.this, "Download failed: " + message, Toast.LENGTH_SHORT).show();
+                });
+            }
+        }, mangaTitle,getFilesDir());
+
+        downloadJob.downloadPages();
     }
+
 }

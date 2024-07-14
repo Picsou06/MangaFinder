@@ -1,18 +1,20 @@
 package fr.picsou.mangafinder.Connector;
+
 import android.os.AsyncTask;
+import android.util.Log;
+
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 public class MangaFireConnector {
     private static final String BASE_URL = "https://mangafire.to";
@@ -21,8 +23,8 @@ public class MangaFireConnector {
     private static final String REQUEST_OPTIONS = "";
 
     // Function to get chapters
-    public static void MangaFire_getChapters(String mangaId, GetChaptersCallback callback, String language) {
-        new GetChaptersTask(mangaId, callback, language).execute();
+    public static void MangaFire_getChapters(String mangaId, GetChaptersCallback callback, String language, String mangaName, String imageURL) {
+        new GetChaptersTask(mangaId, callback, language, mangaName, imageURL).execute();
     }
 
     // Function to get pages
@@ -35,11 +37,15 @@ public class MangaFireConnector {
         private String mangaId;
         private GetChaptersCallback callback;
         private String language;
+        private String mangaName;
+        private String imageURL;
 
-        public GetChaptersTask(String mangaId, GetChaptersCallback callback, String language) {
+        public GetChaptersTask(String mangaId, GetChaptersCallback callback, String language, String mangaName, String imageURL) {
             this.mangaId = mangaId;
             this.callback = callback;
             this.language = language;
+            this.mangaName = mangaName;
+            this.imageURL = imageURL;
         }
 
         @Override
@@ -82,7 +88,7 @@ public class MangaFireConnector {
                     if (chapter.attr("href").contains("/" + "chapter" + "-")) {
                         String itemid = chapter.attr("data-id");
                         String title = chapter.text().trim();
-                        Chapter chapterObject = new Chapter(itemid, "chapter", title, language);
+                        Chapter chapterObject = new Chapter(itemid, "chapter", title, language, imageURL, mangaName);
                         chapterList.add(chapterObject);
                     }
                 }
@@ -91,6 +97,7 @@ public class MangaFireConnector {
             }
             return chapterList;
         }
+
 
         @Override
         protected void onPostExecute(List<Chapter> chapters) {
@@ -113,15 +120,11 @@ public class MangaFireConnector {
         @Override
         protected List<String> doInBackground(Void... voids) {
             List<String> pages = new ArrayList<>();
+            System.out.println("HELPER,"+chapterId);
             try {
-                JSONObject chapterJson = new JSONObject(chapterId);
-                String itemType = chapterJson.getString("itemtype");
-                String itemId = chapterJson.getString("itemid");
-
-                URL uri = new URL(BASE_URL + CHAPTER_ENDPOINT + itemType + "/" + itemId);
-                HttpURLConnection connection = (HttpURLConnection) uri.openConnection();
+                URL chapterUrl = new URL(BASE_URL + CHAPTER_ENDPOINT + chapterId + "/chapter/en");
+                HttpURLConnection connection = (HttpURLConnection) chapterUrl.openConnection();
                 connection.setRequestMethod("GET");
-                connection.connect();
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 StringBuilder stringBuilder = new StringBuilder();
@@ -131,18 +134,15 @@ public class MangaFireConnector {
                 }
                 reader.close();
 
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                JSONArray imagesArray = jsonObject.getJSONObject("result").getJSONArray("images");
-                for (int i = 0; i < imagesArray.length(); i++) {
-                    JSONArray imageArray = imagesArray.getJSONArray(i);
-                    if (imageArray.getInt(2) < 1) {
-                        pages.add(imageArray.getString(0));
-                    } else {
-                        pages.add(createConnectorURI(imageArray));
-                    }
+                Document document = Jsoup.parse(stringBuilder.toString());
+                Elements pageElements = document.select("img[data-src]");
+
+                for (Element page : pageElements) {
+                    String imageUrl = page.attr("data-src");
+                    pages.add(imageUrl);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e("GetPagesTask", "Error fetching pages", e);
             }
             return pages;
         }
@@ -152,11 +152,6 @@ public class MangaFireConnector {
             if (callback != null) {
                 callback.onPagesLoaded(pages);
             }
-        }
-
-        private String createConnectorURI(JSONArray imageArray) {
-            // Implement the logic to create the URI from imageArray
-            return "";
         }
     }
 
@@ -176,12 +171,16 @@ public class MangaFireConnector {
         private String type;
         private String title;
         private String language;
+        private String imageURL;
+        private String MangaName;
 
-        public Chapter(String id, String type, String title, String language) {
+        public Chapter(String id, String type, String title, String language, String imageURL, String MangaName) {
             this.id = id;
             this.type = type;
             this.title = title;
             this.language = language;
+            this.imageURL = imageURL;
+            this.MangaName = MangaName;
         }
 
         public String getId() {
@@ -198,6 +197,12 @@ public class MangaFireConnector {
 
         public String getLanguage() {
             return language;
+        }
+        public String getImageURL() {
+            return imageURL;
+        }
+        public String getMangaName() {
+            return MangaName;
         }
     }
 }

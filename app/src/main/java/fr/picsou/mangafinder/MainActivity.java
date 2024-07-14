@@ -93,4 +93,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    public File getBaseFile(){
+        return getFilesDir();
+    }
 }
