@@ -27,4 +27,7 @@ public interface BookDAO {
 
     @Query("SELECT * FROM books WHERE language IN (:languages) ORDER BY title LIMIT :limit OFFSET :offset")
     List<BookClass> getBooks(int limit, int offset, List<String> languages);
+
+    @Query("SELECT imageUrl FROM books WHERE title LIKE '%' || :searchText || '%' ORDER BY title LIMIT 1")
+    String getPicture(String searchText);
 }

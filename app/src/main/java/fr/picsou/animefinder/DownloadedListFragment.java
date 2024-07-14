@@ -25,12 +25,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
 import fr.picsou.animefinder.BookRead.BookReaderAdapter;
 import fr.picsou.animefinder.BookRead.BookReaderClass;
+import fr.picsou.animefinder.BookSearch.BookLocalDatabase;
 
 public class DownloadedListFragment extends Fragment {
 
@@ -200,6 +204,33 @@ public class DownloadedListFragment extends Fragment {
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(getContext(), "Erreur lors de l'importation du fichier.", Toast.LENGTH_SHORT).show();
+        }
+        String imageCoverLink = BookLocalDatabase.getDatabase(getContext()).bookDao().getPicture(animeName);
+        if (imageCoverLink != null) {
+            try {
+                URL url = new URL(imageCoverLink);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.connect();
+
+                File coverFile = new File(animeFolder, "cover.jpg");
+
+                FileOutputStream outputStream = new FileOutputStream(coverFile);
+                InputStream inputStream = connection.getInputStream();
+
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+
+                inputStream.close();
+                outputStream.close();
+
+                Toast.makeText(getContext(), "Image de couverture téléchargée et sauvegardée.", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(getContext(), "Erreur lors du téléchargement de l'image de couverture.", Toast.LENGTH_SHORT).show();
+            }
         }
         System.out.println("HELPER, fichier importé!");
         refreshBookListInternal();
