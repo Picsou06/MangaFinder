@@ -45,7 +45,7 @@ public class ChapitreFinderSelectorActivity extends AppCompatActivity implements
             String coverUrl = args.getString("cover", "");
             String animeName = args.getString("animeName", "");
             String id = args.getString("id", "");
-            String language = args.getString("language", "en");
+            language = args.getString("language", "en");
 
             if (coverUrl != null && !coverUrl.isEmpty()) {
                 Glide.with(this)
@@ -89,7 +89,6 @@ public class ChapitreFinderSelectorActivity extends AppCompatActivity implements
             public void onPagesLoaded(List<String> pages) {
                 System.out.println("HELPER,"+pages.toString());
                 System.out.println("HELPER,"+pages.get(0).toString());
-
             }
         });
     }

@@ -1,26 +1,19 @@
 package fr.picsou.animefinder.BookRead;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.NavUtils;
-import com.bumptech.glide.Glide;
-import com.github.junrar.Archive;
-import com.github.junrar.rarfile.FileHeader;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.Buffer;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -34,7 +27,6 @@ public class MangaViewer extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_manga_reader);
         setContentView(R.layout.activity_manga_reader);
 
         Intent intent = getIntent();
@@ -50,66 +42,57 @@ public class MangaViewer extends AppCompatActivity {
 
         LinearLayout imageContainer = findViewById(R.id.image_container);
 
-        try {
-            unzip(new File(mangaName), new File(cbzFilePath));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        // Ajout d'une vérification pour voir si le fichier existe
+        File cbzFile = new File(cbzFilePath);
+        if (!cbzFile.exists()) {
+            Log.e(TAG, "Le fichier CBZ n'existe pas : " + cbzFilePath);
+            return;
+        } else {
+            Log.d(TAG, "Le fichier CBZ existe : " + cbzFilePath);
         }
-    }
 
-
-    private void extractAndDisplayImages(String cbzFilePath, LinearLayout imageContainer) {
         try {
-            File cbzFile = new File(cbzFilePath);
-            Archive archive = new Archive(cbzFile);
-
-            if (archive != null) {
-                FileHeader fileHeader;
-                while ((fileHeader = archive.nextFileHeader()) != null) {
-                    if (!fileHeader.isDirectory()) {
-                        String fileName = fileHeader.getFileNameString().trim();
-                        File outputFile = new File(getCacheDir(), fileName);
-
-                        try (FileOutputStream os = new FileOutputStream(outputFile)) {
-                            archive.extractFile(fileHeader, os);
-                        }
-
-                        ImageView imageView = new ImageView(this);
-                        Glide.with(this).load(outputFile).into(imageView);
-
-                        imageContainer.addView(imageView);
-                    }
-                }
-            }
-        } catch (Exception e) {
+            extractAndDisplayImages(cbzFilePath, imageContainer);
+        } catch (IOException e) {
             Log.e(TAG, "Erreur lors de l'extraction des images du fichier CBZ", e);
         }
     }
-    public static void unzip(File zipFile, File targetDirectory) throws IOException {
-        ZipInputStream zis = new ZipInputStream(
-                new BufferedInputStream(new FileInputStream(zipFile)));
-        try {
+
+    private void extractAndDisplayImages(String cbzFilePath, LinearLayout imageContainer) throws IOException {
+        Log.d(TAG, "Ouverture du fichier CBZ : " + cbzFilePath);
+
+        try (InputStream fis = new FileInputStream(cbzFilePath);
+             ZipInputStream zis = new ZipInputStream(fis)) {
+            Log.d(TAG, "Fichier CBZ ouvert avec succès.");
+
             ZipEntry ze;
-            int count;
-            byte[] buffer = new byte[8192];
             while ((ze = zis.getNextEntry()) != null) {
-                File file = new File(targetDirectory, ze.getName());
-                File dir = ze.isDirectory() ? file : file.getParentFile();
-                if (!dir.isDirectory() && !dir.mkdirs())
-                    throw new FileNotFoundException("Failed to ensure directory: " +
-                            dir.getAbsolutePath());
-                if (ze.isDirectory())
-                    continue;
-                FileOutputStream fout = new FileOutputStream(file);
-                try {
-                    while ((count = zis.read(buffer)) != -1)
-                        fout.write(buffer, 0, count);
-                } finally {
-                    fout.close();
+                if (!ze.isDirectory()) {
+                    Log.d(TAG, "Extraction de l'entrée : " + ze.getName());
+                    Bitmap bm = BitmapFactory.decodeStream(zis);
+
+                    if (bm != null) {
+                        ImageView imageView = new ImageView(this);
+                        imageView.setImageBitmap(bm);
+                        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                        imageView.setAdjustViewBounds(true);
+
+                        // Paramètres de disposition pour éviter l'espace entre les images
+                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        layoutParams.setMargins(0, 0, 0, 0); // Marges à zéro
+                        imageView.setLayoutParams(layoutParams);
+
+                        imageContainer.addView(imageView);
+                    } else {
+                        Log.e(TAG, "Erreur lors du décodage de l'image : " + ze.getName());
+                    }
                 }
             }
-        } finally {
-            zis.close();
+        } catch (IOException e) {
+            Log.e(TAG, "Erreur lors de l'ouverture du fichier CBZ.", e);
+            throw e;
         }
     }
 }

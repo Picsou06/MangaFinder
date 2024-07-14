@@ -102,6 +102,7 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
         RelativeLayout book1Container, book2Container;
         ImageView book1Image, book2Image;
         TextView book1Title, book2Title;
+        ImageView book1_flag, book2_flag;
 
         public BookViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -111,6 +112,8 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
             book1Title = itemView.findViewById(R.id.book1_title);
             book2Image = itemView.findViewById(R.id.book2_image);
             book2Title = itemView.findViewById(R.id.book2_title);
+            book1_flag = itemView.findViewById(R.id.book1_flag);
+            book2_flag = itemView.findViewById(R.id.book2_flag);
         }
 
         public void bindFirstBook(BookReaderClass book) {
@@ -121,6 +124,7 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
                         .into(book1Image);
             }
             book1Title.setText(book.getTitle());
+            book1_flag.setVisibility(View.INVISIBLE);
         }
 
         public void bindSecondBook(BookReaderClass book) {
@@ -131,6 +135,7 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
                         .into(book2Image);
             }
             book2Title.setText(book.getTitle());
+            book2_flag.setVisibility(View.INVISIBLE);
         }
 
         public void hideSecondBook() {

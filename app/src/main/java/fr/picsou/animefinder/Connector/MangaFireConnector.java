@@ -62,6 +62,7 @@ public class MangaFireConnector {
                 reader.close();
 
                 URL uri = new URL(BASE_URL + CHAPTER_ENDPOINT + id + "/chapter/" + language);
+                System.out.println("HELPER,"+BASE_URL + CHAPTER_ENDPOINT + id + "/chapter/" + language);
                 HttpURLConnection chapterConnection = (HttpURLConnection) uri.openConnection();
                 chapterConnection.setRequestMethod("GET");
                 chapterConnection.connect();

@@ -1,5 +1,6 @@
 [versions]
 agp = "8.5.0"
+commonsCompress = "1.21"
 compiler = "4.12.0"
 compilerVersion = "1.0.0"
 fragmentKtx = "1.6.0"
@@ -42,6 +43,7 @@ androidx-material = { module = "androidx.compose.material:material", version.ref
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commonsCompress" }
 fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "compiler" }

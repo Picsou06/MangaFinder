@@ -67,6 +67,7 @@ dependencies {
     implementation libs.jetbrains.kotlinx.coroutines.android
     implementation libs.glide
     implementation libs.jsoup
+    implementation libs.commons.compress
     implementation libs.volley
     annotationProcessor libs.androidx.room.compiler
     testImplementation libs.junit
