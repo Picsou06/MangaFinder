@@ -3,6 +3,7 @@ package fr.picsou.mangafinder.Connector;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -88,6 +89,7 @@ public class MangaFireConnector {
                     if (chapter.attr("href").contains("/" + "chapter" + "-")) {
                         String itemid = chapter.attr("data-id");
                         String title = chapter.text().trim();
+                        System.out.println("HELPER, Chqpter creqtion: "+ itemid + "chapter" + title + language + imageURL + mangaName);
                         Chapter chapterObject = new Chapter(itemid, "chapter", title, language, imageURL, mangaName);
                         chapterList.add(chapterObject);
                     }
@@ -97,7 +99,6 @@ public class MangaFireConnector {
             }
             return chapterList;
         }
-
 
         @Override
         protected void onPostExecute(List<Chapter> chapters) {
@@ -120,9 +121,8 @@ public class MangaFireConnector {
         @Override
         protected List<String> doInBackground(Void... voids) {
             List<String> pages = new ArrayList<>();
-            System.out.println("HELPER,"+chapterId);
             try {
-                URL chapterUrl = new URL(BASE_URL + CHAPTER_ENDPOINT + chapterId + "/chapter/en");
+                URL chapterUrl = new URL(BASE_URL + CHAPTER_ENDPOINT + "/chapter/" + chapterId);
                 HttpURLConnection connection = (HttpURLConnection) chapterUrl.openConnection();
                 connection.setRequestMethod("GET");
 
@@ -134,11 +134,12 @@ public class MangaFireConnector {
                 }
                 reader.close();
 
-                Document document = Jsoup.parse(stringBuilder.toString());
-                Elements pageElements = document.select("img[data-src]");
+                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
+                JSONArray imagesArray = jsonObject.getJSONObject("result").getJSONArray("images");
 
-                for (Element page : pageElements) {
-                    String imageUrl = page.attr("data-src");
+                for (int i = 0; i < imagesArray.length(); i++) {
+                    JSONArray imageArray = imagesArray.getJSONArray(i);
+                    String imageUrl = imageArray.getString(0);
                     pages.add(imageUrl);
                 }
             } catch (Exception e) {

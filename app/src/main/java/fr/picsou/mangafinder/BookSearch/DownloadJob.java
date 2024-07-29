@@ -12,7 +12,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import fr.picsou.mangafinder.Connector.MangaFireConnector;
-import fr.picsou.mangafinder.MainActivity;
 
 public class DownloadJob {
     private static final int CHUNK_SIZE = 8388608; // 8 MB
@@ -24,51 +23,29 @@ public class DownloadJob {
     private DownloadCallback callback;
     private String mangaTitle;
     private File basedir;
+    private String imageURL;  // Ajouter imageURL
 
-    public DownloadJob(MangaFireConnector.Chapter chapter, String language, DownloadCallback callback, String mangaTitle, File basedir) {
+    public DownloadJob(MangaFireConnector.Chapter chapter, DownloadCallback callback, File basedir) {
         this.chapter = chapter;
-        this.language = language;
+        this.language = chapter.getLanguage();
         this.callback = callback;
-        this.mangaTitle = mangaTitle;
+        this.mangaTitle = chapter.getMangaName();
         this.basedir = basedir;
+        this.imageURL = chapter.getImageURL();
     }
 
     public void downloadPages() {
-        new DownloadPagesTask().execute();
-    }
-
-    private class DownloadPagesTask extends AsyncTask<Void, Void, List<String>> {
-        @Override
-        protected List<String> doInBackground(Void... voids) {
-            List<String> pages = null;
-            try {
-                String chapterId = chapter.getId();
-                String id = chapterId.replaceAll("manga/[^.]+\\.(\\w+)", "$1");
-
-                URL uri = new URL(BASE_URL + CHAPTER_ENDPOINT + id + "/chapter/" + language);
-                HttpURLConnection connection = (HttpURLConnection) uri.openConnection();
-                connection.setRequestMethod("GET");
-                connection.connect();
-
-                InputStream inputStream = connection.getInputStream();
-                // TODO: Parse JSON or other format to extract page URLs
-                // For demonstration, using simulated pages
-                pages = List.of("https://example.com/page1.jpg", "https://example.com/page2.jpg", "https://example.com/page3.jpg");
-
-            } catch (Exception e) {
-                e.printStackTrace();
+        // Utiliser MangaFireConnector pour obtenir la liste des pages
+        MangaFireConnector.MangaFire_getPages(chapter.getId(), new MangaFireConnector.GetPagesCallback() {
+            @Override
+            public void onPagesLoaded(List<String> pages) {
+                if (pages == null || pages.isEmpty()) {
+                    callback.onDownloadFailed("Empty page list");
+                } else {
+                    new DownloadPageTask().execute(pages.toArray(new String[0]));
+                }
             }
-            return pages;
-        }
-
-        @Override
-        protected void onPostExecute(List<String> pages) {
-            if (pages == null || pages.isEmpty()) {
-                callback.onDownloadFailed("Empty page list");
-            } else {
-                new DownloadPageTask().execute(pages.toArray(new String[0]));
-            }
-        }
+        });
     }
 
     private class DownloadPageTask extends AsyncTask<String, Void, Void> {
@@ -80,11 +57,9 @@ public class DownloadJob {
                     mangaDir.mkdirs();
                 }
 
-                // Download cover image (using the first page as cover for demonstration)
-                downloadCoverImage(urls[0], mangaDir);
+                downloadCoverImage(imageURL, mangaDir);
 
-                // Create CBZ archive for chapter
-                createCBZArchive(urls, mangaDir, "nomduchapitre");
+                createCBZArchive(urls, mangaDir, chapter.getTitle());
 
                 callback.onDownloadCompleted();
 
@@ -101,7 +76,7 @@ public class DownloadJob {
             connection.setRequestMethod("GET");
             connection.connect();
 
-            File coverFile = new File(mangaDir, "cover.png");
+            File coverFile = new File(mangaDir, "cover.jpg");
             FileOutputStream outputStream = new FileOutputStream(coverFile);
 
             InputStream inputStream = connection.getInputStream();

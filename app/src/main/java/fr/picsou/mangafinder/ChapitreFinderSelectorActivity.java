@@ -83,7 +83,7 @@ public class ChapitreFinderSelectorActivity extends AppCompatActivity implements
 
     @Override
     public void onDownloadClick(MangaFireConnector.Chapter chapter, String mangaTitle) {
-        DownloadJob downloadJob = new DownloadJob(chapter, language, new DownloadJob.DownloadCallback() {
+        DownloadJob downloadJob = new DownloadJob(chapter, new DownloadJob.DownloadCallback() {
             @Override
             public void onDownloadCompleted() {
                 runOnUiThread(() -> {
@@ -97,7 +97,7 @@ public class ChapitreFinderSelectorActivity extends AppCompatActivity implements
                     Toast.makeText(ChapitreFinderSelectorActivity.this, "Download failed: " + message, Toast.LENGTH_SHORT).show();
                 });
             }
-        }, mangaTitle,getFilesDir());
+        },getFilesDir());
 
         downloadJob.downloadPages();
     }
