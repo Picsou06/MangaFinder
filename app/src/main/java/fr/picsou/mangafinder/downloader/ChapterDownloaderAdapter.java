@@ -44,6 +44,7 @@ public class ChapterDownloaderAdapter extends RecyclerView.Adapter<ChapterDownlo
         MangaFireConnector.Chapter chapter = chapters.get(position);
         holder.chapterName.setText(chapter.getTitle());
         holder.itemView.setOnClickListener(v -> listener.onChapterClick(chapter));
+        holder.actionbutton.setImageResource(R.drawable.ic_download_black);
 
         if (chapter.isDownloaded()) {
             holder.actionbutton.setVisibility(View.GONE);

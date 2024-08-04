@@ -1,5 +1,6 @@
 package fr.picsou.mangafinder.downloader;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
@@ -21,9 +22,10 @@ import java.util.Objects;
 
 import fr.picsou.mangafinder.Connector.MangaFireConnector;
 import fr.picsou.mangafinder.R;
+import fr.picsou.mangafinder.reader.ChapitreReaderListActivity;
+import fr.picsou.mangafinder.reader.MangaViewer;
 
 public class ChapitreDownloaderActivity extends AppCompatActivity implements ChapterDownloaderAdapter.OnChapterClickListener {
-
     private ChapterDownloaderAdapter adapter;
     private List<MangaFireConnector.Chapter> mangaChapters;
     private String language;
@@ -86,6 +88,15 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
 
     @Override
     public void onChapterClick(MangaFireConnector.Chapter chapter) {
+        if (chapter.isDownloaded())
+        {
+            String chapterName = chapter.getTitle();
+            File file = new File(getFilesDir(), "MangaFinder/" + language + "-" + chapter.getMangaName() + "/" + chapter.getTitle() + ".cbz");
+            Intent intent = new Intent(ChapitreDownloaderActivity.this, MangaViewer.class);
+            intent.putExtra("MANGA_NAME", chapterName);
+            intent.putExtra("CBZ_FILE_PATH", file.getAbsolutePath());
+            startActivity(intent);
+        }
 
     }
 
