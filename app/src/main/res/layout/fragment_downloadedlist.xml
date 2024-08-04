@@ -79,14 +79,21 @@
             android:padding="8dp" />
     </LinearLayout>
 
-    <!-- RecyclerView pour afficher la liste des livres -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view_books"
+    <!-- Ajouter SwipeRefreshLayout pour envelopper RecyclerView -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/text_view_header"
-        android:layout_above="@id/bottom_navigation"
-        android:paddingBottom="56dp" />
+        android:layout_above="@id/bottom_navigation">
+
+        <!-- RecyclerView pour afficher la liste des livres -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_books"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="56dp" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- TextView pour afficher un message lorsque la liste est vide -->
     <TextView

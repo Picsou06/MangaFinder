@@ -1,7 +1,10 @@
-package fr.picsou.mangafinder;
+package fr.picsou.mangafinder.downloader;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,19 +14,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import fr.picsou.mangafinder.BookSearch.ChapterDownloaderAdapter;
-import fr.picsou.mangafinder.BookSearch.DownloadJob;
 import fr.picsou.mangafinder.Connector.MangaFireConnector;
+import fr.picsou.mangafinder.R;
 
-public class ChapitreFinderSelectorActivity extends AppCompatActivity implements ChapterDownloaderAdapter.OnChapterClickListener {
+public class ChapitreDownloaderActivity extends AppCompatActivity implements ChapterDownloaderAdapter.OnChapterClickListener {
 
     private ChapterDownloaderAdapter adapter;
     private List<MangaFireConnector.Chapter> mangaChapters;
     private String language;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +60,7 @@ public class ChapitreFinderSelectorActivity extends AppCompatActivity implements
 
             mangaChapters = new ArrayList<>();
 
-            RecyclerView recyclerView = findViewById(R.id.list_chapters);
+            recyclerView = findViewById(R.id.list_chapters);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
             adapter = new ChapterDownloaderAdapter(this, mangaChapters, this);
             recyclerView.setAdapter(adapter);
@@ -64,42 +68,60 @@ public class ChapitreFinderSelectorActivity extends AppCompatActivity implements
             loadChapters(id, animeName, coverUrl);
         }
     }
-
     private void loadChapters(String mangaId, String mangaName, String imageURL) {
         MangaFireConnector.MangaFire_getChapters(mangaId, new MangaFireConnector.GetChaptersCallback() {
             @Override
             public void onChaptersLoaded(List<MangaFireConnector.Chapter> loadedChapters) {
                 mangaChapters.clear();
-                mangaChapters.addAll(loadedChapters);
+                for (MangaFireConnector.Chapter chapter : loadedChapters) {
+                    File file = new File(getFilesDir(), "MangaFinder/" + language + "-" + chapter.getMangaName() + "/" + chapter.getTitle() + ".cbz");
+                    chapter.setDownloaded(file.exists());
+                    mangaChapters.add(chapter);
+                }
                 adapter.notifyDataSetChanged();
             }
         }, language, mangaName, imageURL);
     }
 
+
     @Override
     public void onChapterClick(MangaFireConnector.Chapter chapter) {
-        System.out.println("HELPER, "+chapter.getId()+ " " + chapter.getTitle());
+
     }
 
     @Override
     public void onDownloadClick(MangaFireConnector.Chapter chapter, String mangaTitle) {
-        DownloadJob downloadJob = new DownloadJob(chapter, new DownloadJob.DownloadCallback() {
-            @Override
-            public void onDownloadCompleted() {
-                runOnUiThread(() -> {
-                    Toast.makeText(ChapitreFinderSelectorActivity.this, "Download completed", Toast.LENGTH_SHORT).show();
-                });
-            }
+        int position = mangaChapters.indexOf(chapter);
+        if (position != -1) {
+            View view = recyclerView.findViewHolderForAdapterPosition(position).itemView;
+            ImageButton downloadButton = view.findViewById(R.id.action_button);
+            ProgressBar progressBar = view.findViewById(R.id.progress_bar);
 
-            @Override
-            public void onDownloadFailed(String message) {
-                runOnUiThread(() -> {
-                    Toast.makeText(ChapitreFinderSelectorActivity.this, "Download failed: " + message, Toast.LENGTH_SHORT).show();
-                });
-            }
-        },getFilesDir());
+            downloadButton.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.VISIBLE);
 
-        downloadJob.downloadPages();
+            DownloadJob downloadJob = new DownloadJob(chapter, new DownloadJob.DownloadCallback() {
+                @Override
+                public void onDownloadCompleted() {
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(ChapitreDownloaderActivity.this, "Download completed", Toast.LENGTH_SHORT).show();
+                        chapter.setDownloaded(true);
+                        adapter.updateChapterState(chapter);
+                    });
+                }
+
+                @Override
+                public void onDownloadFailed(String message) {
+                    runOnUiThread(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        downloadButton.setVisibility(View.VISIBLE);
+                        Toast.makeText(ChapitreDownloaderActivity.this, "Download failed: " + message, Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }, getFilesDir());
+
+            downloadJob.downloadPages();
+        }
     }
-
 }

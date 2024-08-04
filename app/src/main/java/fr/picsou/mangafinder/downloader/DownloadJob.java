@@ -1,5 +1,6 @@
-package fr.picsou.mangafinder.BookSearch;
+package fr.picsou.mangafinder.downloader;
 
+import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 
 import java.io.File;
@@ -14,16 +15,12 @@ import java.util.zip.ZipOutputStream;
 import fr.picsou.mangafinder.Connector.MangaFireConnector;
 
 public class DownloadJob {
-    private static final int CHUNK_SIZE = 8388608; // 8 MB
-    private static final String BASE_URL = "https://mangafire.to";
-    private static final String CHAPTER_ENDPOINT = "/ajax/read";
-
     private MangaFireConnector.Chapter chapter;
     private String language;
     private DownloadCallback callback;
     private String mangaTitle;
     private File basedir;
-    private String imageURL;  // Ajouter imageURL
+    private String imageURL;
 
     public DownloadJob(MangaFireConnector.Chapter chapter, DownloadCallback callback, File basedir) {
         this.chapter = chapter;
@@ -35,7 +32,6 @@ public class DownloadJob {
     }
 
     public void downloadPages() {
-        // Utiliser MangaFireConnector pour obtenir la liste des pages
         MangaFireConnector.MangaFire_getPages(chapter.getId(), new MangaFireConnector.GetPagesCallback() {
             @Override
             public void onPagesLoaded(List<String> pages) {
@@ -52,7 +48,7 @@ public class DownloadJob {
         @Override
         protected Void doInBackground(String... urls) {
             try {
-                File mangaDir = new File(basedir, "MangaFinder/" + mangaTitle);
+                File mangaDir = new File(basedir, "MangaFinder/" + language + "-" + mangaTitle);
                 if (!mangaDir.exists()) {
                     mangaDir.mkdirs();
                 }

@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder;
+package fr.picsou.mangafinder.reader;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -22,10 +22,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import fr.picsou.mangafinder.BookRead.ChapterReaderAdapter;
-import fr.picsou.mangafinder.BookRead.MangaViewer;
+import fr.picsou.mangafinder.R;
 
-public class ChapitreReaderSelectorActivity extends AppCompatActivity implements ChapterReaderAdapter.OnChapterClickListener {
+public class ChapitreReaderListActivity extends AppCompatActivity implements ChapterReaderAdapter.OnChapterClickListener {
     private ChapterReaderAdapter adapter;
     private List<File> chapterFiles;
 
@@ -98,8 +97,7 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
     public void onChapterClick(File chapter) {
         String chapterName = chapter.getName();
         String chapterPath = chapter.getAbsolutePath();
-        System.out.println("HELPER, " + chapterName);
-        Intent intent = new Intent(ChapitreReaderSelectorActivity.this, MangaViewer.class);
+        Intent intent = new Intent(ChapitreReaderListActivity.this, MangaViewer.class);
         intent.putExtra("MANGA_NAME", chapterName);
         intent.putExtra("CBZ_FILE_PATH", chapterPath);
         startActivity(intent);
@@ -113,7 +111,7 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
             if (adapter.getItemCount() == 0) {
                 boolean deleted = deleteAnimeFolder();
                 if (deleted) {
-                    DownloadedListFragment.refreshBookList();
+                    MangaReaderListFragment.refreshBookList();
                     finish();
                 }
             }
@@ -130,7 +128,7 @@ public class ChapitreReaderSelectorActivity extends AppCompatActivity implements
         builder.setPositiveButton("Oui", (dialog, which) -> {
             boolean deleted = deleteAnimeFolder();
             if (deleted) {
-                DownloadedListFragment.refreshBookList();
+                MangaReaderListFragment.refreshBookList();
                 finish();
             }
         });

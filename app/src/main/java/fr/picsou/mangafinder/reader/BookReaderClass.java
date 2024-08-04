@@ -1,15 +1,17 @@
-package fr.picsou.mangafinder.BookRead;
+package fr.picsou.mangafinder.reader;
 
 
 public class BookReaderClass {
     private String title;
     private String imageCover;
     private String NumberOfPages;
+    private String language;
 
-    public BookReaderClass(String title, String imageCover, String NumberOfPages) {
+    public BookReaderClass(String title, String imageCover, String NumberOfPages, String language) {
         this.title = title;
         this.imageCover = imageCover;
         this.NumberOfPages = NumberOfPages;
+        this.language = language;
     }
 
     public String getTitle() {
@@ -38,4 +40,13 @@ public class BookReaderClass {
     public void setNumberOfPages(String NumberOfPages) {
         this.NumberOfPages = NumberOfPages;
     }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
 }

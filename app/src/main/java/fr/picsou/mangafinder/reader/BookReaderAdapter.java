@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.BookSearch;
+package fr.picsou.mangafinder.reader;
 
 import android.content.Context;
 import android.util.Log;
@@ -8,22 +8,18 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.bumptech.glide.Glide;
-
 import java.util.List;
-
 import fr.picsou.mangafinder.R;
 
-public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.BookViewHolder> {
+public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.BookViewHolder> {
     private final Context mContext;
-    private final List<BookClass> mBookList;
+    private List<BookReaderClass> mBookList;
     private OnBookClickListener mListener;
 
-    public BookSearchAdapter(Context context, List<BookClass> bookList) {
+    public BookReaderAdapter(Context context, List<BookReaderClass> bookList) {
         mContext = context;
         mBookList = bookList;
     }
@@ -33,8 +29,8 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
         mListener = listener;
     }
 
-    public void updateBooks(List<BookClass> newBookList) {
-        mBookList.addAll(newBookList);
+    public void updateBooks(List<BookReaderClass> newBookList) {
+        mBookList=newBookList;
         notifyDataSetChanged();
     }
 
@@ -61,7 +57,7 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
 
         if (secondBookIndex < mBookList.size()) {
             holder.bindSecondBook(mBookList.get(secondBookIndex));
-            holder.book2Container.setVisibility(View.VISIBLE);
+            holder.showSecondBook();
         } else {
             holder.hideSecondBook();
         }
@@ -83,11 +79,16 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
 
     @Override
     public int getItemCount() {
-        return (int) Math.ceil((double) mBookList.size() / 2);
+        if (mBookList == null) {
+            return 0;
+        } else {
+            return (int) Math.ceil((double) mBookList.size() / 2);
+        }
     }
 
+
     public interface OnBookClickListener {
-        void onBookClick(BookClass book);
+        void onBookClick(BookReaderClass book);
     }
 
     public static class BookViewHolder extends RecyclerView.ViewHolder {
@@ -108,26 +109,34 @@ public class BookSearchAdapter extends RecyclerView.Adapter<BookSearchAdapter.Bo
             book2_flag = itemView.findViewById(R.id.book2_flag);
         }
 
-        public void bindFirstBook(BookClass book) {
-            book1Container.setVisibility(View.VISIBLE);
-            Glide.with(itemView.getContext())
-                    .load(book.getImageUrl())
-                    .into(book1Image);
+        public void bindFirstBook(BookReaderClass book) {
+            if (book.getImageCover() != null) {
+                book1Container.setVisibility(View.VISIBLE);
+                Glide.with(itemView.getContext())
+                        .load(book.getImageCover())
+                        .into(book1Image);
+            }
             book1Title.setText(book.getTitle());
             book1_flag.setImageResource(book.getLanguage().equals("fr") ? R.drawable.french_on : R.drawable.english_on);
         }
 
-        public void bindSecondBook(BookClass book) {
-            book2Container.setVisibility(View.VISIBLE);
-            Glide.with(itemView.getContext())
-                    .load(book.getImageUrl())
-                    .into(book2Image);
+        public void bindSecondBook(BookReaderClass book) {
+            if (book.getImageCover() != null) {
+                book2Container.setVisibility(View.VISIBLE);
+                Glide.with(itemView.getContext())
+                        .load(book.getImageCover())
+                        .into(book2Image);
+            }
             book2Title.setText(book.getTitle());
             book2_flag.setImageResource(book.getLanguage().equals("fr") ? R.drawable.french_on : R.drawable.english_on);
         }
 
         public void hideSecondBook() {
             book2Container.setVisibility(View.INVISIBLE);
+        }
+
+        public void showSecondBook() {
+            book2Container.setVisibility(View.VISIBLE);
         }
     }
 }

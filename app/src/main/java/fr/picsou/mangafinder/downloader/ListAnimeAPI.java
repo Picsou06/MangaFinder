@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.BookSearch;
+package fr.picsou.mangafinder.downloader;
 
 import android.app.Activity;
 import android.content.Context;
@@ -88,8 +88,8 @@ public class ListAnimeAPI {
 
             Activity activity = (Activity) mContext;
             activity.runOnUiThread(() -> {
-                ((BookSearchAdapter) searchAdapter).clearBooks();
-                ((BookSearchAdapter) searchAdapter).updateBooks(bookList);
+                ((BookDownloaderAdapter) searchAdapter).clearBooks();
+                ((BookDownloaderAdapter) searchAdapter).updateBooks(bookList);
             });
         }).start();
     }
@@ -103,8 +103,8 @@ public class ListAnimeAPI {
             activity.runOnUiThread(() -> {
                 if (adapter instanceof BookDownloaderAdapter) {
                     ((BookDownloaderAdapter) adapter).updateBooks(bookList);
-                } else if (adapter instanceof BookSearchAdapter) {
-                    ((BookSearchAdapter) adapter).updateBooks(bookList);
+                } else if (adapter instanceof BookDownloaderAdapter) {
+                    ((BookDownloaderAdapter) adapter).updateBooks(bookList);
                 }
                 adapter.notifyDataSetChanged();
             });
@@ -130,7 +130,7 @@ public class ListAnimeAPI {
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(mContext, "HELPER Volley error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "API en maintenance: " + error.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 

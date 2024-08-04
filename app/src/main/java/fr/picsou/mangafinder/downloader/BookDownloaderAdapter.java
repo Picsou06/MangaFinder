@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.BookRead;
+package fr.picsou.mangafinder.downloader;
 
 import android.content.Context;
 import android.util.Log;
@@ -8,18 +8,22 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.bumptech.glide.Glide;
+
 import java.util.List;
+
 import fr.picsou.mangafinder.R;
 
-public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.BookViewHolder> {
+public class BookDownloaderAdapter extends RecyclerView.Adapter<BookDownloaderAdapter.BookViewHolder> {
     private final Context mContext;
-    private List<BookReaderClass> mBookList;
+    private final List<BookClass> mBookList;
     private OnBookClickListener mListener;
 
-    public BookReaderAdapter(Context context, List<BookReaderClass> bookList) {
+    public BookDownloaderAdapter(Context context, List<BookClass> bookList) {
         mContext = context;
         mBookList = bookList;
     }
@@ -29,8 +33,8 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
         mListener = listener;
     }
 
-    public void updateBooks(List<BookReaderClass> newBookList) {
-        mBookList=newBookList;
+    public void updateBooks(List<BookClass> newBookList) {
+        mBookList.addAll(newBookList);
         notifyDataSetChanged();
     }
 
@@ -51,20 +55,14 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
         int firstBookIndex = position * 2;
         int secondBookIndex = firstBookIndex + 1;
 
-        System.out.println("Binding books at position: " + position);
-        System.out.println("First book index: " + firstBookIndex);
-        System.out.println("Second book index: " + secondBookIndex);
-
         if (firstBookIndex < mBookList.size()) {
             holder.bindFirstBook(mBookList.get(firstBookIndex));
         }
 
         if (secondBookIndex < mBookList.size()) {
-            System.out.println("HELPER, Bind Second Book");
             holder.bindSecondBook(mBookList.get(secondBookIndex));
-            holder.showSecondBook();
+            holder.book2Container.setVisibility(View.VISIBLE);
         } else {
-            System.out.println("HELPER, Hide Second Book");
             holder.hideSecondBook();
         }
 
@@ -85,16 +83,11 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
 
     @Override
     public int getItemCount() {
-        if (mBookList == null) {
-            return 0;
-        } else {
-            return (int) Math.ceil((double) mBookList.size() / 2);
-        }
+        return (int) Math.ceil((double) mBookList.size() / 2);
     }
 
-
     public interface OnBookClickListener {
-        void onBookClick(BookReaderClass book);
+        void onBookClick(BookClass book);
     }
 
     public static class BookViewHolder extends RecyclerView.ViewHolder {
@@ -115,34 +108,26 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
             book2_flag = itemView.findViewById(R.id.book2_flag);
         }
 
-        public void bindFirstBook(BookReaderClass book) {
-            if (book.getImageCover() != null) {
-                book1Container.setVisibility(View.VISIBLE);
-                Glide.with(itemView.getContext())
-                        .load(book.getImageCover())
-                        .into(book1Image);
-            }
+        public void bindFirstBook(BookClass book) {
+            book1Container.setVisibility(View.VISIBLE);
+            Glide.with(itemView.getContext())
+                    .load(book.getImageUrl())
+                    .into(book1Image);
             book1Title.setText(book.getTitle());
-            book1_flag.setVisibility(View.INVISIBLE);
+            book1_flag.setImageResource(book.getLanguage().equals("fr") ? R.drawable.french_on : R.drawable.english_on);
         }
 
-        public void bindSecondBook(BookReaderClass book) {
-            if (book.getImageCover() != null) {
-                book2Container.setVisibility(View.VISIBLE);
-                Glide.with(itemView.getContext())
-                        .load(book.getImageCover())
-                        .into(book2Image);
-            }
+        public void bindSecondBook(BookClass book) {
+            book2Container.setVisibility(View.VISIBLE);
+            Glide.with(itemView.getContext())
+                    .load(book.getImageUrl())
+                    .into(book2Image);
             book2Title.setText(book.getTitle());
-            book2_flag.setVisibility(View.INVISIBLE);
+            book2_flag.setImageResource(book.getLanguage().equals("fr") ? R.drawable.french_on : R.drawable.english_on);
         }
 
         public void hideSecondBook() {
             book2Container.setVisibility(View.INVISIBLE);
-        }
-
-        public void showSecondBook() {
-            book2Container.setVisibility(View.VISIBLE);
         }
     }
 }

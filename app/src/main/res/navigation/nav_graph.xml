@@ -6,12 +6,12 @@
 
     <fragment
         android:id="@+id/downloaderFragment"
-        android:name="fr.picsou.mangafinder.FinderFragment"
+        android:name="fr.picsou.mangafinder.downloader.DownloaderFragment"
         android:label="Downloader Fragment"/>
 
     <fragment
         android:id="@+id/ReaderFragment"
-        android:name="fr.picsou.mangafinder.DownloadedListFragment"
+        android:name="fr.picsou.mangafinder.reader.MangaReaderListFragment"
         android:label="Reader Fragment"/>
 
 </navigation>

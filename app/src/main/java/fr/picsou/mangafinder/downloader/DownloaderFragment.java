@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder;
+package fr.picsou.mangafinder.downloader;
 
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -20,16 +20,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.picsou.mangafinder.BookSearch.BookClass;
-import fr.picsou.mangafinder.BookSearch.BookLocalDatabase;
-import fr.picsou.mangafinder.BookSearch.BookDownloaderAdapter;
-import fr.picsou.mangafinder.BookSearch.BookSearchAdapter;
-import fr.picsou.mangafinder.BookSearch.ListAnimeAPI;
+import fr.picsou.mangafinder.R;
 
-public class FinderFragment extends Fragment implements BookDownloaderAdapter.OnBookClickListener, BookSearchAdapter.OnBookClickListener {
+public class DownloaderFragment extends Fragment implements BookDownloaderAdapter.OnBookClickListener {
     private ListAnimeAPI listAnimeAPI;
     private BookDownloaderAdapter mAdapter;
-    private BookSearchAdapter searchAdapter;
+    private BookDownloaderAdapter searchAdapter;
     private EditText searchEditText;
     private int currentPage = 0;
     private static final int PAGE_SIZE = 25;
@@ -38,7 +34,7 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
     private boolean isEnglishSelected = true;
     private ImageButton frenchButton, englishButton;
 
-    public FinderFragment() {
+    public DownloaderFragment() {
         // Required empty public constructor
     }
 
@@ -57,7 +53,7 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
         List<BookClass> mBookList = new ArrayList<>();
         List<BookClass> searchBookList = new ArrayList<>();
         mAdapter = new BookDownloaderAdapter(getContext(), mBookList);
-        searchAdapter = new BookSearchAdapter(getContext(), searchBookList);
+        searchAdapter = new BookDownloaderAdapter(getContext(), searchBookList);
         mAdapter.setOnBookClickListener(this);
         searchAdapter.setOnBookClickListener(this);
         mRecyclerView.setAdapter(mAdapter);
@@ -186,7 +182,7 @@ public class FinderFragment extends Fragment implements BookDownloaderAdapter.On
     }
 
     public void onBookClick(BookClass book) {
-        Intent intent = new Intent(getActivity(), ChapitreFinderSelectorActivity.class);
+        Intent intent = new Intent(getActivity(), ChapitreDownloaderActivity.class);
         intent.putExtra("cover", book.getImageUrl());
         intent.putExtra("animeName", book.getTitle());
         intent.putExtra("id", book.getId());

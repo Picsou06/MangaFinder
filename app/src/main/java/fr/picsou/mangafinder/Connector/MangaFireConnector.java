@@ -68,7 +68,6 @@ public class MangaFireConnector {
                 reader.close();
 
                 URL uri = new URL(BASE_URL + CHAPTER_ENDPOINT + id + "/chapter/" + language);
-                System.out.println("HELPER,"+BASE_URL + CHAPTER_ENDPOINT + id + "/chapter/" + language);
                 HttpURLConnection chapterConnection = (HttpURLConnection) uri.openConnection();
                 chapterConnection.setRequestMethod("GET");
                 chapterConnection.connect();
@@ -89,7 +88,6 @@ public class MangaFireConnector {
                     if (chapter.attr("href").contains("/" + "chapter" + "-")) {
                         String itemid = chapter.attr("data-id");
                         String title = chapter.text().trim();
-                        System.out.println("HELPER, Chqpter creqtion: "+ itemid + "chapter" + title + language + imageURL + mangaName);
                         Chapter chapterObject = new Chapter(itemid, "chapter", title, language, imageURL, mangaName);
                         chapterList.add(chapterObject);
                     }
@@ -174,6 +172,7 @@ public class MangaFireConnector {
         private String language;
         private String imageURL;
         private String MangaName;
+        private boolean isDownloaded;
 
         public Chapter(String id, String type, String title, String language, String imageURL, String MangaName) {
             this.id = id;
@@ -204,6 +203,14 @@ public class MangaFireConnector {
         }
         public String getMangaName() {
             return MangaName;
+        }
+
+        public boolean isDownloaded() {
+            return isDownloaded;
+        }
+
+        public void setDownloaded(boolean downloaded) {
+            isDownloaded = downloaded;
         }
     }
 }

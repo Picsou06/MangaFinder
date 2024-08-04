@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.BookRead;
+package fr.picsou.mangafinder.reader;
 
 import android.content.Context;
 import android.view.LayoutInflater;

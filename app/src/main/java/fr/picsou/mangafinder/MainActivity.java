@@ -14,6 +14,9 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.File;
 
+import fr.picsou.mangafinder.reader.MangaReaderListFragment;
+import fr.picsou.mangafinder.downloader.DownloaderFragment;
+
 public class MainActivity extends AppCompatActivity {
 
     private ViewPager2 viewPager;
@@ -35,9 +38,9 @@ public class MainActivity extends AppCompatActivity {
             public Fragment createFragment(int position) {
                 switch (position) {
                     case 0:
-                        return new FinderFragment();
+                        return new DownloaderFragment();
                     case 1:
-                        return new DownloadedListFragment();
+                        return new MangaReaderListFragment();
                     default:
                         return null;
                 }

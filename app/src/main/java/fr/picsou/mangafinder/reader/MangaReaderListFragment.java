@@ -1,11 +1,10 @@
-package fr.picsou.mangafinder;
+package fr.picsou.mangafinder.reader;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.LayoutInflater;
@@ -28,28 +27,30 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-import fr.picsou.mangafinder.BookRead.BookReaderAdapter;
-import fr.picsou.mangafinder.BookRead.BookReaderClass;
-import fr.picsou.mangafinder.BookSearch.BookLocalDatabase;
+import fr.picsou.mangafinder.downloader.BookLocalDatabase;
+import fr.picsou.mangafinder.R;
 
-public class DownloadedListFragment extends Fragment {
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+public class MangaReaderListFragment extends Fragment {
 
     private BookReaderAdapter bookAdapter;
     private LinearLayout importMenuLayout;
     private EditText editTextAnimeName;
     private TextView textViewSelectedFile;
-    private static DownloadedListFragment instance;
+    private static MangaReaderListFragment instance;
     private File selectedFile;
-    private RecyclerView recyclerView; // Declare the RecyclerView here
+    private RecyclerView recyclerView;
     private List<BookReaderClass> bookList;
     private View view;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -57,7 +58,8 @@ public class DownloadedListFragment extends Fragment {
         instance = this;
         view = inflater.inflate(R.layout.fragment_downloadedlist, container, false);
 
-        recyclerView = view.findViewById(R.id.recycler_view_books); // Initialize the RecyclerView
+        recyclerView = view.findViewById(R.id.recycler_view_books);
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
         ImageButton btnOpenMangaFinder = view.findViewById(R.id.btn_open_anime_finder);
         importMenuLayout = view.findViewById(R.id.import_menu_layout);
@@ -66,17 +68,12 @@ public class DownloadedListFragment extends Fragment {
         textViewSelectedFile = view.findViewById(R.id.text_view_selected_file);
         Button btnImport = view.findViewById(R.id.btn_import);
 
-        btnOpenMangaFinder.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toggleImportMenu();
-            }
-        });
+        btnOpenMangaFinder.setOnClickListener(v -> toggleImportMenu());
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         bookList = getListOfBooks();
 
-        if (bookList == null || bookList.isEmpty()) {
+        if (bookList.isEmpty()) {
             textViewEmpty.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
         } else {
@@ -86,19 +83,18 @@ public class DownloadedListFragment extends Fragment {
             bookAdapter = new BookReaderAdapter(getContext(), bookList);
             recyclerView.setAdapter(bookAdapter);
 
-            bookAdapter.setOnBookClickListener(new BookReaderAdapter.OnBookClickListener() {
-                @Override
-                public void onBookClick(BookReaderClass book) {
-                    openChapitreSelectorActivity(book);
-                }
-            });
+            bookAdapter.setOnBookClickListener(this::openChapitreSelectorActivity);
         }
 
         btnChooseFile.setOnClickListener(this::onChooseFileClick);
         btnImport.setOnClickListener(this::onImportClick);
 
+        // Configure swipe-to-refresh
+        swipeRefreshLayout.setOnRefreshListener(this::refreshBookListInternal);
+
         return view;
     }
+
 
     private void toggleImportMenu() {
         if (importMenuLayout.getVisibility() == View.VISIBLE) {
@@ -142,7 +138,7 @@ public class DownloadedListFragment extends Fragment {
         Cursor cursor = null;
         try {
             String[] projection = {MediaStore.MediaColumns.DISPLAY_NAME};
-            cursor = getActivity().getContentResolver().query(uri, projection, null, null, null);
+            cursor = requireActivity().getContentResolver().query(uri, projection, null, null, null);
             if (cursor != null && cursor.moveToFirst()) {
                 int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
                 fileName = cursor.getString(columnIndex);
@@ -160,7 +156,7 @@ public class DownloadedListFragment extends Fragment {
     private File createFileFromUri(Uri uri, String name) {
         File file = null;
         try {
-            file = new File(getActivity().getCacheDir(), name);
+            file = new File(requireActivity().getCacheDir(), name);
             copyUriToFile(uri, file);
         } catch (IOException e) {
             e.printStackTrace();
@@ -170,15 +166,16 @@ public class DownloadedListFragment extends Fragment {
 
     private void copyUriToFile(Uri uri, File file) throws IOException {
         try (FileOutputStream outputStream = new FileOutputStream(file);
-             FileInputStream inputStream = (FileInputStream) getActivity().getContentResolver().openInputStream(uri)) {
+             FileInputStream inputStream = (FileInputStream) requireActivity().getContentResolver().openInputStream(uri)) {
             byte[] buffer = new byte[1024];
             int length;
-            while ((length = inputStream.read(buffer)) > 0) {
+            while ((length = Objects.requireNonNull(inputStream).read(buffer)) > 0) {
                 outputStream.write(buffer, 0, length);
             }
         }
     }
 
+    @SuppressLint("SetTextI18n")
     public void onImportClick(View view) {
         toggleImportMenu();
         String animeName = editTextAnimeName.getText().toString().trim();
@@ -193,7 +190,7 @@ public class DownloadedListFragment extends Fragment {
             return;
         }
 
-        File animeFolder = new File(getActivity().getFilesDir(), "MangaFinder/" + animeName);
+        File animeFolder = new File(requireActivity().getFilesDir(), "MangaFinder/" + animeName);
         if (!animeFolder.exists()) {
             animeFolder.mkdirs();
         }
@@ -209,7 +206,6 @@ public class DownloadedListFragment extends Fragment {
             Toast.makeText(getContext(), "Erreur lors de l'importation du fichier.", Toast.LENGTH_SHORT).show();
         }
 
-        // Thread pour télécharger l'image de couverture
         Thread downloadThread = new Thread(() -> {
             String imageCoverLink = BookLocalDatabase.getDatabase(getContext()).bookDao().getPicture(animeName);
 
@@ -234,53 +230,24 @@ public class DownloadedListFragment extends Fragment {
                     outputStream.close();
 
                     // Retourner sur le thread principal pour afficher un Toast
-                    getActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Image de couverture téléchargée et sauvegardée.", Toast.LENGTH_SHORT).show();
-                    });
+                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Image de couverture téléchargée et sauvegardée.", Toast.LENGTH_SHORT).show());
 
                 } catch (IOException e) {
                     e.printStackTrace();
                     // Retourner sur le thread principal pour afficher un Toast
-                    getActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Erreur lors du téléchargement de l'image de couverture.", Toast.LENGTH_SHORT).show();
-                    });
+                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Erreur lors du téléchargement de l'image de couverture.", Toast.LENGTH_SHORT).show());
                 }
             }
-            System.out.println("HELPER, image ajoutée!");
         });
 
-        // Démarrer le thread de téléchargement
         downloadThread.start();
 
         try {
-            // Attendre que le thread de téléchargement soit terminé
             downloadThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        // Suite du code après que le téléchargement soit terminé
-        System.out.println("HELPER, fichier importé!");
         refreshBookListInternal();
-    }
-
-
-    private static class GetPictureAsyncTask extends AsyncTask<String, Void, String> {
-
-        private WeakReference<Context> contextRef;
-
-        GetPictureAsyncTask(Context context) {
-            contextRef = new WeakReference<>(context);
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            Context context = contextRef.get();
-            if (context == null) return null;
-
-            String animeName = params[0];
-            return BookLocalDatabase.getDatabase(context).bookDao().getPicture(animeName);
-        }
     }
 
 
@@ -297,7 +264,9 @@ public class DownloadedListFragment extends Fragment {
         }
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private void refreshBookListInternal() {
+        swipeRefreshLayout.setRefreshing(true);
         bookList = getListOfBooks();
         TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
         if (bookList == null || bookList.isEmpty()) {
@@ -310,39 +279,32 @@ public class DownloadedListFragment extends Fragment {
             bookAdapter = new BookReaderAdapter(getContext(), bookList);
             recyclerView.setAdapter(bookAdapter);
 
-            bookAdapter.setOnBookClickListener(new BookReaderAdapter.OnBookClickListener() {
-                @Override
-                public void onBookClick(BookReaderClass book) {
-                    openChapitreSelectorActivity(book);
-                }
-            });
+            bookAdapter.setOnBookClickListener(this::openChapitreSelectorActivity);
         }
-        System.out.println("HELPER, Folder Updated");
 
         List<BookReaderClass> bookList = getListOfBooks();
-        System.out.println("HELPER, " + bookList.toString());
-
         if (bookAdapter != null) {
             bookAdapter.clearBooks();
             bookAdapter.updateBooks(bookList);
             bookAdapter.notifyDataSetChanged();
         } else {
             bookAdapter = new BookReaderAdapter(getContext(), bookList);
-            recyclerView.setAdapter(bookAdapter); // Set the adapter here if it's not set
+            recyclerView.setAdapter(bookAdapter);
         }
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     private void openChapitreSelectorActivity(BookReaderClass book) {
-        Intent intent = new Intent(getActivity(), ChapitreReaderSelectorActivity.class);
+        Intent intent = new Intent(getActivity(), ChapitreReaderListActivity.class);
         intent.putExtra("cover", book.getImageCover());
-        intent.putExtra("animeName", book.getTitle());
+        intent.putExtra("animeName", book.getLanguage()+"-"+book.getTitle());
         startActivity(intent);
     }
 
     private List<BookReaderClass> getListOfBooks() {
         List<BookReaderClass> bookList = new ArrayList<>();
 
-        File MangaFinderDir = new File(getActivity().getFilesDir(), "MangaFinder");
+        File MangaFinderDir = new File(requireActivity().getFilesDir(), "MangaFinder");
         if (MangaFinderDir.exists() && MangaFinderDir.isDirectory()) {
             File[] animeFolders = MangaFinderDir.listFiles(File::isDirectory);
 
@@ -350,6 +312,10 @@ public class DownloadedListFragment extends Fragment {
                 for (File folder : animeFolders) {
                     String title = folder.getName();
                     String imageCoverPath = folder.getAbsolutePath() + File.separator + "cover.jpg";
+
+                    String[] titleParts = title.split("-", 2);
+                    String language = (titleParts.length > 1) ? titleParts[0].trim() : "Unknown";
+                    String actualTitle = (titleParts.length > 1) ? titleParts[1].trim() : title;
 
                     // Check if cover.jpg exists
                     File coverFile = new File(imageCoverPath);
@@ -359,7 +325,7 @@ public class DownloadedListFragment extends Fragment {
 
                     int numberOfPages = getNumberOfPages(folder);
 
-                    BookReaderClass book = new BookReaderClass(title, imageCoverPath, String.valueOf(numberOfPages));
+                    BookReaderClass book = new BookReaderClass(actualTitle, imageCoverPath, String.valueOf(numberOfPages), language);
                     bookList.add(book);
                 }
             }
@@ -367,6 +333,7 @@ public class DownloadedListFragment extends Fragment {
 
         return bookList;
     }
+
 
     private int getNumberOfPages(File folder) {
         File[] files = folder.listFiles();
