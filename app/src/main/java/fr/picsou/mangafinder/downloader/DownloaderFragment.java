@@ -1,5 +1,9 @@
+// DownloaderFragment.java
+
 package fr.picsou.mangafinder.downloader;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -8,19 +12,23 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import fr.picsou.mangafinder.R;
+import fr.picsou.mangafinder.SettingsActivity;
 
 public class DownloaderFragment extends Fragment implements BookDownloaderAdapter.OnBookClickListener {
     private ListAnimeAPI listAnimeAPI;
@@ -33,6 +41,10 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     private boolean isFrenchSelected = true;
     private boolean isEnglishSelected = true;
     private ImageButton frenchButton, englishButton;
+    private TextView noMangaMessage;
+    private Button changeApiButton;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    int port;
 
     public DownloaderFragment() {
         // Required empty public constructor
@@ -58,13 +70,35 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
         searchAdapter.setOnBookClickListener(this);
         mRecyclerView.setAdapter(mAdapter);
 
-        // Initialize ListAnimeAPI and fetch the anime list
-        listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, searchAdapter);
+        // Initialize SwipeRefreshLayout
+        swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            // Reload data when user performs swipe-to-refresh
+            loadInitialData();
+        });
+
+        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        String serverUrl = sharedPreferences.getString("server_url", "default_url");
+        String portString = sharedPreferences.getString("server_port", "3000");
+        if (!portString.isEmpty()) {
+            port = Integer.parseInt(portString);
+        } else {
+            port = 3000;
+        }
+        listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, searchAdapter, serverUrl, port);
         AsyncTask.execute(() -> {
             long count = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
             listAnimeAPI.updateDatabase(count);
+            getActivity().runOnUiThread(() -> {
+                mAdapter.notifyDataSetChanged();
+                if (mAdapter.getItemCount() == 0) {
+                    showNoMangaMessage();
+                } else {
+                    hideNoMangaMessage();
+                }
+                loadMoreData();
+            });
         });
-
 
         // Setup the EditText and TextWatcher
         searchEditText = view.findViewById(R.id.search_edit_text);
@@ -108,6 +142,21 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
             updateLanguageList();
         });
 
+        // Setup the settings button
+        ImageButton settingsButton = view.findViewById(R.id.settings_button);
+        settingsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), SettingsActivity.class);
+            startActivity(intent);
+        });
+
+        // Setup the no manga message and change API button
+        noMangaMessage = view.findViewById(R.id.no_manga_message);
+        changeApiButton = view.findViewById(R.id.change_api_button);
+        changeApiButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), SettingsActivity.class);
+            startActivity(intent);
+        });
+
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
@@ -130,21 +179,44 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
         AsyncTask.execute(() -> {
             long totalBooks = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
             listAnimeAPI.updateDatabase(totalBooks);
-            getActivity().runOnUiThread(() -> mAdapter.notifyDataSetChanged());
-            loadMoreData();
+            getActivity().runOnUiThread(() -> {
+                mAdapter.notifyDataSetChanged();
+                if (mAdapter.getItemCount() == 0) {
+                    showNoMangaMessage();
+                } else {
+                    hideNoMangaMessage();
+                }
+                loadMoreData();
+                swipeRefreshLayout.setRefreshing(false); // Stop the refreshing animation
+            });
         });
     }
 
-    private void updatelocalData(){
-        currentPage=0;
+    private void updatelocalData() {
+        currentPage = 0;
         mAdapter.clearBooks();
         listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, 0, mAdapter, language);
-        mAdapter.notifyDataSetChanged();
+        getActivity().runOnUiThread(() -> {
+            mAdapter.notifyDataSetChanged();
+            if (mAdapter.getItemCount() == 0) {
+                showNoMangaMessage();
+            } else {
+                hideNoMangaMessage();
+            }
+        });
     }
 
     private void loadMoreData() {
         int offset = currentPage * PAGE_SIZE;
         listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, offset, mAdapter, language);
+        getActivity().runOnUiThread(() -> {
+            mAdapter.notifyDataSetChanged();
+            if (mAdapter.getItemCount() == 0) {
+                showNoMangaMessage();
+            } else {
+                hideNoMangaMessage();
+            }
+        });
         currentPage++;
     }
 
@@ -161,6 +233,7 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     }
 
     private void updateLanguageList() {
+        hideNoMangaMessage();
         language.clear();
         if (isFrenchSelected) {
             language.add("fr");
@@ -181,10 +254,20 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
         searchAdapter.notifyDataSetChanged();
     }
 
+    private void showNoMangaMessage() {
+        noMangaMessage.setVisibility(View.VISIBLE);
+        changeApiButton.setVisibility(View.VISIBLE);
+    }
+
+    private void hideNoMangaMessage() {
+        noMangaMessage.setVisibility(View.GONE);
+        changeApiButton.setVisibility(View.GONE);
+    }
+
     public void onBookClick(BookClass book) {
         Intent intent = new Intent(getActivity(), ChapitreDownloaderActivity.class);
         intent.putExtra("cover", book.getImageUrl());
-        intent.putExtra("animeName", book.getTitle());
+        intent.putExtra("MangaName", book.getTitle());
         intent.putExtra("id", book.getId());
         intent.putExtra("language", book.getLanguage());
         startActivity(intent);

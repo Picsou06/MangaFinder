@@ -1,14 +1,11 @@
 package fr.picsou.mangafinder.Connector;
 
-import android.os.AsyncTask;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -16,48 +13,58 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import fr.picsou.mangafinder.downloader.BookClass;
 
 public class MangaFireConnector {
-    private static final String BASE_URL = "https://mangafire.to";
-    private static final String CHAPTER_ENDPOINT = "/ajax/read";
-    private static final String ID_REGEX = "manga/[^.]+\\.(\\w+)";
-    private static final String REQUEST_OPTIONS = "";
+    private String API_BASE_URL;
+    private final Context context;
+    private final ExecutorService executorService;
 
-    // Function to get chapters
-    public static void MangaFire_getChapters(String mangaId, GetChaptersCallback callback, String language, String mangaName, String imageURL) {
-        new GetChaptersTask(mangaId, callback, language, mangaName, imageURL).execute();
+    public MangaFireConnector(Context context) {
+        this.context = context;
+        this.executorService = Executors.newFixedThreadPool(4);
+        updateApiBaseUrl();
     }
 
-    // Function to get pages
-    public static void MangaFire_getPages(String chapterId, GetPagesCallback callback) {
-        new GetPagesTask(chapterId, callback).execute();
+    private void updateApiBaseUrl() {
+        SharedPreferences sharedPreferences = context.getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+        String serverUrl = sharedPreferences.getString("server_url", "default_url");
+        String portString = sharedPreferences.getString("server_port", "3000");
+        int port = portString.isEmpty() ? 3000 : Integer.parseInt(portString);
+        API_BASE_URL = String.format("http://%s:%d/", serverUrl, port);
     }
 
-    // AsyncTask to get chapters
-    private static class GetChaptersTask extends AsyncTask<Void, Void, List<Chapter>> {
-        private String mangaId;
-        private GetChaptersCallback callback;
-        private String language;
-        private String mangaName;
-        private String imageURL;
+    public void MangaFire_getChapters(String mangaId, String language, String cover, String MangaName, GetChaptersCallback callback) {
+        updateApiBaseUrl();
+        executorService.execute(new GetChaptersTask(mangaId, language, cover, MangaName, callback));
+    }
 
-        public GetChaptersTask(String mangaId, GetChaptersCallback callback, String language, String mangaName, String imageURL) {
+    private class GetChaptersTask implements Runnable {
+        private final String mangaId;
+        private final String language;
+        private final String cover;
+        private final String MangaName;
+        private final GetChaptersCallback callback;
+
+        public GetChaptersTask(String mangaId, String language, String cover, String MangaName, GetChaptersCallback callback) {
             this.mangaId = mangaId;
-            this.callback = callback;
             this.language = language;
-            this.mangaName = mangaName;
-            this.imageURL = imageURL;
+            this.cover = cover;
+            this.MangaName = MangaName;
+            this.callback = callback;
         }
 
         @Override
-        protected List<Chapter> doInBackground(Void... voids) {
-            List<Chapter> chapterList = new ArrayList<>();
+        public void run() {
+            List<Chapter> chapters = new ArrayList<>();
             try {
-                String id = mangaId.replaceAll(ID_REGEX, "$1");
-                URL mangauri = new URL(BASE_URL + "/manga" + id);
-                HttpURLConnection connection = (HttpURLConnection) mangauri.openConnection();
+                String id = mangaId.substring(mangaId.lastIndexOf('.') + 1);
+                URL url = new URL(API_BASE_URL + "chapter/" + id + "?language=" + language);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
-                connection.connect();
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 StringBuilder stringBuilder = new StringBuilder();
@@ -67,49 +74,36 @@ public class MangaFireConnector {
                 }
                 reader.close();
 
-                URL uri = new URL(BASE_URL + CHAPTER_ENDPOINT + id + "/chapter/" + language);
-                HttpURLConnection chapterConnection = (HttpURLConnection) uri.openConnection();
-                chapterConnection.setRequestMethod("GET");
-                chapterConnection.connect();
+                JSONArray chaptersArray = new JSONArray(stringBuilder.toString());
 
-                BufferedReader chapterReader = new BufferedReader(new InputStreamReader(chapterConnection.getInputStream()));
-                StringBuilder chapterStringBuilder = new StringBuilder();
-                String chapterLine;
-                while ((chapterLine = chapterReader.readLine()) != null) {
-                    chapterStringBuilder.append(chapterLine);
-                }
-                chapterReader.close();
-
-                JSONObject jsonObject = new JSONObject(chapterStringBuilder.toString());
-                Document chapterDom = Jsoup.parse(jsonObject.getJSONObject("result").getString("html"));
-                Elements chaptersNodes = chapterDom.select("a");
-
-                for (Element chapter : chaptersNodes) {
-                    if (chapter.attr("href").contains("/" + "chapter" + "-")) {
-                        String itemid = chapter.attr("data-id");
-                        String title = chapter.text().trim();
-                        Chapter chapterObject = new Chapter(itemid, "chapter", title, language, imageURL, mangaName);
-                        chapterList.add(chapterObject);
-                    }
+                for (int i = 0; i < chaptersArray.length(); i++) {
+                    JSONObject chapterObject = chaptersArray.getJSONObject(i);
+                    String chapterId = chapterObject.getString("itemid");
+                    String title = chapterObject.getString("title");
+                    Chapter chapter = new Chapter(chapterId, "chapter", title, language, cover, MangaName);
+                    chapters.add(chapter);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e("GetChaptersTask", "Error fetching chapters", e);
             }
-            return chapterList;
-        }
-
-        @Override
-        protected void onPostExecute(List<Chapter> chapters) {
             if (callback != null) {
                 callback.onChaptersLoaded(chapters);
             }
         }
     }
 
-    // AsyncTask to get pages
-    private static class GetPagesTask extends AsyncTask<Void, Void, List<String>> {
-        private String chapterId;
-        private GetPagesCallback callback;
+    public interface GetChaptersCallback {
+        void onChaptersLoaded(List<Chapter> chapters);
+    }
+
+    public void MangaFire_getPages(String chapterId, GetPagesCallback callback) {
+        updateApiBaseUrl();
+        executorService.execute(new GetPagesTask(chapterId, callback));
+    }
+
+    private class GetPagesTask implements Runnable {
+        private final String chapterId;
+        private final GetPagesCallback callback;
 
         public GetPagesTask(String chapterId, GetPagesCallback callback) {
             this.chapterId = chapterId;
@@ -117,11 +111,11 @@ public class MangaFireConnector {
         }
 
         @Override
-        protected List<String> doInBackground(Void... voids) {
+        public void run() {
             List<String> pages = new ArrayList<>();
             try {
-                URL chapterUrl = new URL(BASE_URL + CHAPTER_ENDPOINT + "/chapter/" + chapterId);
-                HttpURLConnection connection = (HttpURLConnection) chapterUrl.openConnection();
+                URL url = new URL(API_BASE_URL + "page/" + chapterId);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
 
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -132,55 +126,42 @@ public class MangaFireConnector {
                 }
                 reader.close();
 
-                JSONObject jsonObject = new JSONObject(stringBuilder.toString());
-                JSONArray imagesArray = jsonObject.getJSONObject("result").getJSONArray("images");
+                JSONArray jsonArray = new JSONArray(stringBuilder.toString());
 
-                for (int i = 0; i < imagesArray.length(); i++) {
-                    JSONArray imageArray = imagesArray.getJSONArray(i);
-                    String imageUrl = imageArray.getString(0);
-                    pages.add(imageUrl);
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    String pageUrl = jsonArray.getString(i);
+                    pages.add(pageUrl);
                 }
             } catch (Exception e) {
                 Log.e("GetPagesTask", "Error fetching pages", e);
             }
-            return pages;
-        }
-
-        @Override
-        protected void onPostExecute(List<String> pages) {
             if (callback != null) {
                 callback.onPagesLoaded(pages);
             }
         }
     }
 
-    // Callback interface for chapters
-    public interface GetChaptersCallback {
-        void onChaptersLoaded(List<Chapter> chapters);
-    }
-
-    // Callback interface for pages
     public interface GetPagesCallback {
         void onPagesLoaded(List<String> pages);
     }
 
-    // Chapter model
     public static class Chapter {
         private String id;
         private String type;
         private String title;
         private String language;
         private String imageURL;
-        private String MangaName;
+        private String mangaName;
         private boolean isDownloaded;
 
-        public Chapter(String id, String type, String title, String language, String imageURL, String MangaName) {
+        public Chapter(String id, String type, String title, String language, String imageURL, String mangaName) {
             this.id = id;
             this.type = type;
             this.title = title;
             this.language = language;
             this.imageURL = imageURL;
-            this.MangaName = MangaName;
+            this.mangaName = mangaName;
+            this.isDownloaded = false;
         }
 
         public String getId() {
@@ -198,11 +179,13 @@ public class MangaFireConnector {
         public String getLanguage() {
             return language;
         }
+
         public String getImageURL() {
             return imageURL;
         }
+
         public String getMangaName() {
-            return MangaName;
+            return mangaName;
         }
 
         public boolean isDownloaded() {

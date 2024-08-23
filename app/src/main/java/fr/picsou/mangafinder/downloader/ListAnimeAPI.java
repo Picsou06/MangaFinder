@@ -2,7 +2,8 @@ package fr.picsou.mangafinder.downloader;
 
 import android.app.Activity;
 import android.content.Context;
-import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 import com.android.volley.Request;
@@ -19,91 +20,84 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ListAnimeAPI {
-    private static final String API_BASE_URL = "http://Picsou06.fun:3001/";
+    private static final String API_BASE_URL = "http://%s:%d/";
     private final Context mContext;
-    private RecyclerView.Adapter mainAdapter;
-    private RecyclerView.Adapter searchAdapter;
+    private final RecyclerView.Adapter mainAdapter;
+    private final RecyclerView.Adapter searchAdapter;
+    private final String ip;
+    private final int port;
+    private final RequestQueue requestQueue;
+    private final Handler mainHandler;
 
-    public ListAnimeAPI(Context context, RecyclerView.Adapter mainAdapter, RecyclerView.Adapter searchAdapter) {
-        mContext = context;
+    public ListAnimeAPI(Context context, RecyclerView.Adapter mainAdapter, RecyclerView.Adapter searchAdapter, String ip, int port) {
+        this.mContext = context;
         this.mainAdapter = mainAdapter;
         this.searchAdapter = searchAdapter;
+        this.ip = ip;
+        this.port = port;
+        this.requestQueue = Volley.newRequestQueue(context.getApplicationContext());
+        this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
     public void fetchAnimeListFromAPI() {
-        String apiUrl = API_BASE_URL + "listmanga/";
+        String apiUrl = String.format(API_BASE_URL, ip, port) + "manga/listmanga/";
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, apiUrl, null,
-                new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-                        AsyncTask.execute(() -> {
-                            List<BookClass> tempBookList = new ArrayList<>();
-                            try {
-                                for (int i = 0; i < response.length(); i++) {
-                                    JSONObject manga = response.getJSONObject(i);
-                                    String id = manga.getString("id");
-                                    String title = manga.getString("title");
-                                    String imageUrl = manga.getString("picture");
-                                    String website = manga.getString("website");
-                                    String language = manga.getString("language");
+                response -> {
+                    List<BookClass> tempBookList = new ArrayList<>();
+                    try {
+                        for (int i = 0; i < response.length(); i++) {
+                            JSONObject manga = response.getJSONObject(i);
+                            String id = manga.getString("id");
+                            String title = manga.getString("title");
+                            String imageUrl = manga.getString("picture");
+                            String website = manga.getString("website");
+                            String language = manga.getString("language");
 
-                                    BookClass book = new BookClass(id, title, imageUrl, website, language);
-                                    tempBookList.add(book);
-                                }
-                                // Insertion des livres dans la base de données
-                                BookLocalDatabase.getDatabase(mContext).bookDao().DeleteAllBook();
-                                BookLocalDatabase.getDatabase(mContext).bookDao().insertBooks(tempBookList);
+                            BookClass book = new BookClass(id, title, imageUrl, website, language);
+                            tempBookList.add(book);
+                        }
 
-                                // Notification à l'adaptateur après l'insertion des données
-                                Activity activity = (Activity) mContext;
-                                activity.runOnUiThread(() -> {
-                                    mainAdapter.notifyDataSetChanged();
-                                    Toast.makeText(mContext, "Données chargées avec succès", Toast.LENGTH_SHORT).show();
-                                });
+                        new Thread(() -> {
+                            BookLocalDatabase.getDatabase(mContext).bookDao().DeleteAllBook();
+                            BookLocalDatabase.getDatabase(mContext).bookDao().insertBooks(tempBookList);
+                        }).start();
 
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                                Activity activity = (Activity) mContext;
-                                activity.runOnUiThread(() -> {
-                                    Toast.makeText(mContext, "Erreur de parsing JSON : " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                                });
-                            }
+                        mainHandler.post(() -> {
+                            mainAdapter.notifyDataSetChanged();
+                            Toast.makeText(mContext, "Données chargées avec succès", Toast.LENGTH_SHORT).show();
+                        });
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        mainHandler.post(() -> {
+                            Toast.makeText(mContext, "Erreur de parsing JSON: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         });
                     }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(mContext, "Erreur lors du téléchargement : " + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+                }, error -> {
+            Toast.makeText(mContext, "Erreur lors du téléchargement: " + error.getMessage(), Toast.LENGTH_SHORT).show();
         });
 
-        RequestQueue queue = Volley.newRequestQueue(mContext);
-        queue.add(jsonArrayRequest);
+        requestQueue.add(jsonArrayRequest);
     }
 
-    public void searchBooksFromDatabase(String searchText, List language) {
+    public void searchBooksFromDatabase(String searchText, List<String> language) {
         new Thread(() -> {
             List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().searchBooks(searchText, language);
-
-            Activity activity = (Activity) mContext;
-            activity.runOnUiThread(() -> {
-                ((BookDownloaderAdapter) searchAdapter).clearBooks();
-                ((BookDownloaderAdapter) searchAdapter).updateBooks(bookList);
+            mainHandler.post(() -> {
+                if (searchAdapter instanceof BookDownloaderAdapter) {
+                    ((BookDownloaderAdapter) searchAdapter).clearBooks();
+                    ((BookDownloaderAdapter) searchAdapter).updateBooks(bookList);
+                }
             });
         }).start();
     }
 
-    public void fetchBooksFromDatabase(int limit, int offset, RecyclerView.Adapter adapter, List language) {
+    public void fetchBooksFromDatabase(int limit, int offset, RecyclerView.Adapter adapter, List<String> language) {
         new Thread(() -> {
             List<BookClass> bookList = BookLocalDatabase.getDatabase(mContext).bookDao().getBooks(limit, offset, language);
-
-            // Mise à jour de l'interface utilisateur sur le thread principal
-            Activity activity = (Activity) mContext;
-            activity.runOnUiThread(() -> {
+            mainHandler.post(() -> {
                 if (adapter instanceof BookDownloaderAdapter) {
-                    ((BookDownloaderAdapter) adapter).updateBooks(bookList);
-                } else if (adapter instanceof BookDownloaderAdapter) {
                     ((BookDownloaderAdapter) adapter).updateBooks(bookList);
                 }
                 adapter.notifyDataSetChanged();
@@ -112,30 +106,24 @@ public class ListAnimeAPI {
     }
 
     public void updateDatabase(long numberOfValue) {
-        String apiUrl = API_BASE_URL + "isupdated/" + numberOfValue;
+        String apiUrl = String.format(API_BASE_URL, ip, port) + "manga/isupdated/" + numberOfValue;
+        System.out.println("HELPER : " + apiUrl);
 
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, apiUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    boolean isUpToDate = response.getBoolean("updated");
-                    if (!isUpToDate) {
-                        fetchAnimeListFromAPI();
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, apiUrl, null,
+                response -> {
+                    try {
+                        boolean isUpToDate = response.getBoolean("updated");
+                        if (!isUpToDate) {
+                            fetchAnimeListFromAPI();
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        Toast.makeText(mContext, "Erreur de parsing JSON: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    Toast.makeText(mContext, "HELPER JSON parsing error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Toast.makeText(mContext, "API en maintenance: " + error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+                }, error -> {
+            Toast.makeText(mContext, "Erreur de mise à jour: " + error.getMessage(), Toast.LENGTH_SHORT).show();
         });
 
-        RequestQueue queue = Volley.newRequestQueue(mContext);
-        queue.add(jsonObjectRequest);
+        requestQueue.add(jsonObjectRequest);
     }
 }
-

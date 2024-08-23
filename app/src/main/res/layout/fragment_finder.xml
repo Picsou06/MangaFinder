@@ -1,5 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mainlayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,17 +12,25 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp"
+        android:padding="11dp"
         android:background="@color/recherche"
-        android:layout_alignParentTop="true"
-        android:layout_marginBottom="8dp">
+        android:layout_alignParentTop="true">
+
+        <ImageButton
+            android:id="@+id/settings_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_settings"
+            android:contentDescription="@string/settings"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp" />
 
         <EditText
             android:id="@+id/search_edit_text"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Search..."
+            android:hint="@string/search_waiting"
             android:padding="8dp"
             android:background="@android:color/transparent"
             android:inputType="text" />
@@ -31,7 +40,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/french_on"
-            android:contentDescription="French"
+            android:contentDescription="@string/french"
             android:background="?attr/selectableItemBackground"
             android:padding="8dp" />
 
@@ -40,7 +49,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/english_on"
-            android:contentDescription="English"
+            android:contentDescription="@string/english"
             android:background="?attr/selectableItemBackground"
             android:padding="8dp" />
 
@@ -49,25 +58,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_search"
-            android:contentDescription="Search"
+            android:contentDescription="@string/search"
             android:background="?attr/selectableItemBackground"
             android:padding="8dp" />
     </LinearLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view_books"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/search_layout"
-        android:layout_above="@id/bottom_navigation"
-        android:paddingBottom="56dp" />
+        android:layout_above="@id/bottom_navigation">
 
-    <FrameLayout
-        android:id="@+id/fragment_container_finder"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@id/search_layout"
-        android:layout_above="@id/bottom_navigation" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_books"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="56dp" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottom_navigation"
@@ -78,4 +87,22 @@
         app:itemTextColor="@color/white"
         app:menu="@menu/bottom_navigation_menu" />
 
+    <!-- Message and button for no manga available -->
+    <TextView
+        android:id="@+id/no_manga_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/l_api_ne_retourne_aucun_manga"
+        android:textColor="@color/white"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/change_api_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/modifier_l_api"
+        android:layout_below="@id/no_manga_message"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone" />
 </RelativeLayout>

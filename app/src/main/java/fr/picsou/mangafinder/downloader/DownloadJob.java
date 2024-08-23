@@ -16,103 +16,106 @@ import fr.picsou.mangafinder.Connector.MangaFireConnector;
 
 public class DownloadJob {
     private MangaFireConnector.Chapter chapter;
-    private String language;
+    private List<String> pageUrls;
     private DownloadCallback callback;
-    private String mangaTitle;
     private File basedir;
-    private String imageURL;
 
-    public DownloadJob(MangaFireConnector.Chapter chapter, DownloadCallback callback, File basedir) {
+    public DownloadJob(MangaFireConnector.Chapter chapter, List<String> pageUrls, DownloadCallback callback, File basedir) {
         this.chapter = chapter;
-        this.language = chapter.getLanguage();
+        this.pageUrls = pageUrls;
         this.callback = callback;
-        this.mangaTitle = chapter.getMangaName();
         this.basedir = basedir;
-        this.imageURL = chapter.getImageURL();
     }
 
     public void downloadPages() {
-        MangaFireConnector.MangaFire_getPages(chapter.getId(), new MangaFireConnector.GetPagesCallback() {
-            @Override
-            public void onPagesLoaded(List<String> pages) {
-                if (pages == null || pages.isEmpty()) {
-                    callback.onDownloadFailed("Empty page list");
-                } else {
-                    new DownloadPageTask().execute(pages.toArray(new String[0]));
-                }
-            }
-        });
+        if (pageUrls == null || pageUrls.isEmpty()) {
+            callback.onDownloadFailed("No pages to download");
+            return;
+        }
+
+        new DownloadPageTask().execute();
     }
 
-    private class DownloadPageTask extends AsyncTask<String, Void, Void> {
+    @SuppressLint("StaticFieldLeak")
+    private class DownloadPageTask extends AsyncTask<Void, Integer, Boolean> {
         @Override
-        protected Void doInBackground(String... urls) {
+        protected Boolean doInBackground(Void... voids) {
             try {
-                File mangaDir = new File(basedir, "MangaFinder/" + language + "-" + mangaTitle);
+                // Create directory for the manga
+                File mangaDir = new File(basedir, "MangaFinder/" + chapter.getLanguage() + "-" + chapter.getMangaName());
                 if (!mangaDir.exists()) {
-                    mangaDir.mkdirs();
+                    if (!mangaDir.mkdirs()) {
+                        return false; // Failed to create directory
+                    }
                 }
 
-                downloadCoverImage(imageURL, mangaDir);
+                // Download cover image
+                downloadCoverImage(chapter.getImageURL(), mangaDir);
 
-                createCBZArchive(urls, mangaDir, chapter.getTitle());
-
-                callback.onDownloadCompleted();
-
+                // Create CBZ archive
+                return createCBZArchive(pageUrls, mangaDir, chapter.getTitle());
             } catch (Exception e) {
                 e.printStackTrace();
-                callback.onDownloadFailed("Error downloading pages: " + e.getMessage());
+                return false;
             }
-            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            if (success) {
+                callback.onDownloadCompleted();
+            } else {
+                callback.onDownloadFailed("Failed to download or create CBZ file");
+            }
         }
 
         private void downloadCoverImage(String coverUrl, File mangaDir) throws Exception {
+            if (coverUrl == null || coverUrl.isEmpty()) return;
+
             URL url = new URL(coverUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.connect();
 
             File coverFile = new File(mangaDir, "cover.jpg");
-            FileOutputStream outputStream = new FileOutputStream(coverFile);
-
-            InputStream inputStream = connection.getInputStream();
-            byte[] buffer = new byte[4096];
-            int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+            try (FileOutputStream outputStream = new FileOutputStream(coverFile);
+                 InputStream inputStream = connection.getInputStream()) {
+                byte[] buffer = new byte[4096];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
             }
-            outputStream.close();
-            inputStream.close();
         }
 
-        private void createCBZArchive(String[] pages, File mangaDir, String chapterName) throws Exception {
+        private boolean createCBZArchive(List<String> pages, File mangaDir, String chapterName) throws Exception {
             File cbzFile = new File(mangaDir, chapterName + ".cbz");
-            FileOutputStream fos = new FileOutputStream(cbzFile);
-            ZipOutputStream zos = new ZipOutputStream(fos);
+            try (FileOutputStream fos = new FileOutputStream(cbzFile);
+                 ZipOutputStream zos = new ZipOutputStream(fos)) {
 
-            byte[] buffer = new byte[1024];
+                byte[] buffer = new byte[1024];
 
-            for (int i = 0; i < pages.length; i++) {
-                String pageUrl = pages[i];
-                URL url = new URL(pageUrl);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.connect();
+                for (int i = 0; i < pages.size(); i++) {
+                    String pageUrl = pages.get(i);
+                    URL url = new URL(pageUrl);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.connect();
 
-                InputStream in = connection.getInputStream();
-                zos.putNextEntry(new ZipEntry("page_" + (i + 1) + ".jpg"));
+                    try (InputStream in = connection.getInputStream()) {
+                        zos.putNextEntry(new ZipEntry("page_" + (i + 1) + ".jpg"));
 
-                int len;
-                while ((len = in.read(buffer)) > 0) {
-                    zos.write(buffer, 0, len);
+                        int len;
+                        while ((len = in.read(buffer)) > 0) {
+                            zos.write(buffer, 0, len);
+                        }
+
+                        zos.closeEntry();
+                    }
                 }
 
-                zos.closeEntry();
-                in.close();
-                connection.disconnect();
+                return true;
             }
-
-            zos.close();
         }
     }
 

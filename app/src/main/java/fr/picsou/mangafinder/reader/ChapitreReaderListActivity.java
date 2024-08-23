@@ -27,6 +27,7 @@ import fr.picsou.mangafinder.R;
 public class ChapitreReaderListActivity extends AppCompatActivity implements ChapterReaderAdapter.OnChapterClickListener {
     private ChapterReaderAdapter adapter;
     private List<File> chapterFiles;
+    String language;
 
     @SuppressLint("ResourceType")
     @Override
@@ -61,7 +62,7 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
         Bundle args = getIntent().getExtras();
         if (args != null) {
             String coverUrl = args.getString("cover", "");
-            String animeName = args.getString("animeName", "");
+            String MangaName = args.getString("MangaName", "");
 
             if (coverUrl != null && !coverUrl.isEmpty()) {
                 Glide.with(this)
@@ -69,9 +70,12 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
                         .into(imageViewCover);
             }
 
-            toolbar.setTitle(animeName);
+            String[] titleParts = MangaName.split("-", 2);
+            language = (titleParts.length > 1) ? titleParts[0].trim() : "Unknown";
+            String actualTitle = (titleParts.length > 1) ? titleParts[1].trim() : MangaName;
+            toolbar.setTitle(actualTitle);
 
-            chapterFiles = getChapterFiles(animeName);
+            chapterFiles = getChapterFiles(MangaName);
 
             RecyclerView recyclerView = findViewById(R.id.list_chapters);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -81,9 +85,9 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
         }
     }
 
-    private List<File> getChapterFiles(String animeName) {
+    private List<File> getChapterFiles(String MangaName) {
         List<File> chapters = new ArrayList<>();
-        File animeDir = new File(getFilesDir(), "MangaFinder" + File.separator + animeName);
+        File animeDir = new File(getFilesDir(), "MangaFinder" + File.separator + MangaName);
         if (animeDir.exists() && animeDir.isDirectory()) {
             File[] files = animeDir.listFiles((dir, name) -> name.endsWith(".cbz"));
             if (files != null) {
@@ -137,8 +141,8 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
     }
 
     private boolean deleteAnimeFolder() {
-        String animeName = Objects.requireNonNull(getSupportActionBar()).getTitle().toString();
-        File animeDir = new File(getFilesDir(), "MangaFinder" + File.separator + animeName);
+        String MangaName = Objects.requireNonNull(getSupportActionBar()).getTitle().toString();
+        File animeDir = new File(getFilesDir(), "MangaFinder" + File.separator + language + "-" + MangaName);
         if (animeDir.exists() && animeDir.isDirectory()) {
             File[] files = animeDir.listFiles();
             if (files != null) {

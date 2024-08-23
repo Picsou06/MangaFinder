@@ -43,7 +43,7 @@ public class MangaReaderListFragment extends Fragment {
 
     private BookReaderAdapter bookAdapter;
     private LinearLayout importMenuLayout;
-    private EditText editTextAnimeName;
+    private EditText editTextMangaName;
     private TextView textViewSelectedFile;
     private static MangaReaderListFragment instance;
     private File selectedFile;
@@ -63,7 +63,7 @@ public class MangaReaderListFragment extends Fragment {
         TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
         ImageButton btnOpenMangaFinder = view.findViewById(R.id.btn_open_anime_finder);
         importMenuLayout = view.findViewById(R.id.import_menu_layout);
-        editTextAnimeName = view.findViewById(R.id.edit_text_anime_name);
+        editTextMangaName = view.findViewById(R.id.edit_text_anime_name);
         Button btnChooseFile = view.findViewById(R.id.btn_choose_file);
         textViewSelectedFile = view.findViewById(R.id.text_view_selected_file);
         Button btnImport = view.findViewById(R.id.btn_import);
@@ -178,9 +178,9 @@ public class MangaReaderListFragment extends Fragment {
     @SuppressLint("SetTextI18n")
     public void onImportClick(View view) {
         toggleImportMenu();
-        String animeName = editTextAnimeName.getText().toString().trim();
+        String MangaName = editTextMangaName.getText().toString().trim();
 
-        if (animeName.isEmpty()) {
+        if (MangaName.isEmpty()) {
             Toast.makeText(getContext(), "Veuillez saisir le nom de l'anime.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -190,7 +190,7 @@ public class MangaReaderListFragment extends Fragment {
             return;
         }
 
-        File animeFolder = new File(requireActivity().getFilesDir(), "MangaFinder/" + animeName);
+        File animeFolder = new File(requireActivity().getFilesDir(), "MangaFinder/" + MangaName);
         if (!animeFolder.exists()) {
             animeFolder.mkdirs();
         }
@@ -207,7 +207,7 @@ public class MangaReaderListFragment extends Fragment {
         }
 
         Thread downloadThread = new Thread(() -> {
-            String imageCoverLink = BookLocalDatabase.getDatabase(getContext()).bookDao().getPicture(animeName);
+            String imageCoverLink = BookLocalDatabase.getDatabase(getContext()).bookDao().getPicture(MangaName);
 
             if (imageCoverLink != null) {
                 try {
@@ -297,7 +297,7 @@ public class MangaReaderListFragment extends Fragment {
     private void openChapitreSelectorActivity(BookReaderClass book) {
         Intent intent = new Intent(getActivity(), ChapitreReaderListActivity.class);
         intent.putExtra("cover", book.getImageCover());
-        intent.putExtra("animeName", book.getLanguage()+"-"+book.getTitle());
+        intent.putExtra("MangaName", book.getLanguage()+"-"+book.getTitle());
         startActivity(intent);
     }
 

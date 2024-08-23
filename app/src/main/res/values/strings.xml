@@ -6,6 +6,24 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="placeholder_synopsis">No Synopsis</string>
     <string name="titre_non_trouv">Titre invalide..</string>
+    <string name="server_url">Server URL</string>
+    <string name="enter_server_url">Enter server URL</string>
+    <string name="port">Port</string>
+    <string name="enter_port">Enter port</string>
+    <string name="modifier_l_api">Modifier l\'API</string>
+    <string name="l_api_ne_retourne_aucun_manga">L\'API ne retourne aucun manga</string>
+    <string name="ouvrir_menu_d_importation">Ouvrir menu d\'importation</string>
+    <string name="mangas_t_l_charg_s">Mangas Téléchargés</string>
+    <string name="nom_de_l_anime">Nom de l\'anime</string>
+    <string name="choisir_un_fichier_cbz">Choisir un fichier .cbz</string>
+    <string name="aucun_fichier_s_lectionn">Aucun fichier sélectionné</string>
+    <string name="importer">Importer</string>
+    <string name="settings">Settings</string>
+    <string name="search_waiting">Search...</string>
+    <string name="french">French</string>
+    <string name="english">English</string>
+    <string name="nsfw">NSFW</string>
+    <string name="save">Save</string>
     <string-array name="languages_array">
         <item>fr</item>
         <item>en</item>

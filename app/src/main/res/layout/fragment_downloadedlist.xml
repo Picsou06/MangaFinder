@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="16dp"
-        android:text="Mangas Téléchargés"
+        android:text="@string/mangas_t_l_charg_s"
         android:textColor="@color/white"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -26,7 +26,7 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_download_white"
         android:background="?attr/selectableItemBackground"
-        android:contentDescription="Ouvrir menu d'importation"
+        android:contentDescription="@string/ouvrir_menu_d_importation"
         android:layout_alignParentEnd="true"
         android:layout_alignParentTop="true"
         android:layout_marginEnd="16dp"
@@ -47,7 +47,7 @@
             android:id="@+id/edit_text_anime_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nom de l'anime"
+            android:hint="@string/nom_de_l_anime"
             android:inputType="text"
             android:padding="8dp" />
 
@@ -56,7 +56,7 @@
             android:id="@+id/btn_choose_file"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Choisir un fichier .cbz"
+            android:text="@string/choisir_un_fichier_cbz"
             android:onClick="onChooseFileClick"
             android:padding="8dp" />
 
@@ -66,7 +66,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:text="Aucun fichier sélectionné"
+            android:text="@string/aucun_fichier_s_lectionn"
             android:visibility="gone" />
 
         <!-- Bouton pour importer le fichier -->
@@ -74,12 +74,11 @@
             android:id="@+id/btn_import"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Importer"
+            android:text="@string/importer"
             android:onClick="onImportClick"
             android:padding="8dp" />
     </LinearLayout>
 
-    <!-- Ajouter SwipeRefreshLayout pour envelopper RecyclerView -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshLayout"
         android:layout_width="match_parent"

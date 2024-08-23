@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/black"
+    tools:context=".reader.MangaViewer">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/recherche"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/server_url"
+        android:textColor="@color/white"
+        android:textSize="18sp" />
+
+    <EditText
+        android:id="@+id/server_url"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/enter_server_url"
+        android:inputType="textUri"
+        android:minHeight="48dp"
+        android:textColor="@color/white"
+        android:textColorHint="@color/white" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/port"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/server_port"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:autofillHints=""
+        android:hint="@string/enter_port"
+        android:inputType="number"
+        android:minHeight="48dp"
+        android:textColor="@color/white"
+        android:textColorHint="@color/white" />
+
+    <Button
+        android:id="@+id/save_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/save"
+        android:layout_marginTop="16dp"
+        android:layout_gravity="center"/>
+</LinearLayout>
