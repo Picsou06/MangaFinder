@@ -1,3 +1,4 @@
+// MangaFireConnector.java
 package fr.picsou.mangafinder.Connector;
 
 import android.content.Context;

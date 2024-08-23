@@ -1,3 +1,4 @@
+// ChapitreDownloaderActivity.java
 package fr.picsou.mangafinder.downloader;
 
 import android.content.Intent;
@@ -12,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 
@@ -30,6 +32,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
     private String language;
     private RecyclerView recyclerView;
     private MangaFireConnector mangaFireConnector;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +74,22 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
             mangaFireConnector = new MangaFireConnector(this);
             loadChapters(id, coverUrl, MangaName);
         }
+
+        // Initialize SwipeRefreshLayout
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Reload chapters
+                Bundle args = getIntent().getExtras();
+                if (args != null) {
+                    String id = args.getString("id", "");
+                    String coverUrl = args.getString("cover", "");
+                    String MangaName = args.getString("MangaName", "");
+                    loadChapters(id, coverUrl, MangaName);
+                }
+            }
+        });
     }
 
     private void loadChapters(String mangaId, String cover, String mangaName) {
@@ -81,12 +100,9 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
                     @Override
                     public void run() {
                         mangaChapters.clear();
-                        for (MangaFireConnector.Chapter chapter : loadedChapters) {
-                            File file = new File(getFilesDir(), "MangaFinder/" + language + "-" + chapter.getMangaName() + "/" + chapter.getTitle() + ".cbz");
-                            chapter.setDownloaded(file.exists());
-                            mangaChapters.add(chapter);
-                        }
+                        mangaChapters.addAll(loadedChapters);
                         adapter.notifyDataSetChanged();
+                        swipeRefreshLayout.setRefreshing(false); // Stop the refreshing animation
                     }
                 });
             }
