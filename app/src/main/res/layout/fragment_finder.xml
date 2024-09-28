@@ -104,5 +104,14 @@
         android:text="@string/modifier_l_api"
         android:layout_below="@id/no_manga_message"
         android:layout_centerHorizontal="true"
+        android:visibility="visible" />
+
+    <TextView
+        android:id="@+id/no_api_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/vous_n_avez_pas_definit_d_api_pour_le_moment"
+        android:textColor="@color/white"
+        android:layout_centerInParent="true"
         android:visibility="gone" />
 </RelativeLayout>

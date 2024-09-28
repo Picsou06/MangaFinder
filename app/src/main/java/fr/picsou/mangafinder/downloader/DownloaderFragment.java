@@ -3,8 +3,8 @@
 package fr.picsou.mangafinder.downloader;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -42,6 +42,7 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     private boolean isEnglishSelected = true;
     private ImageButton frenchButton, englishButton;
     private TextView noMangaMessage;
+    private TextView noAPIMessage;
     private Button changeApiButton;
     private SwipeRefreshLayout swipeRefreshLayout;
     int port;
@@ -60,6 +61,7 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_books);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         List<BookClass> mBookList = new ArrayList<>();
@@ -68,93 +70,88 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
         searchAdapter = new BookDownloaderAdapter(getContext(), searchBookList);
         mAdapter.setOnBookClickListener(this);
         searchAdapter.setOnBookClickListener(this);
+        noMangaMessage = view.findViewById(R.id.no_manga_message);
+        noAPIMessage = view.findViewById(R.id.no_api_message);
+        changeApiButton = view.findViewById(R.id.change_api_button);
         mRecyclerView.setAdapter(mAdapter);
 
         // Initialize SwipeRefreshLayout
         swipeRefreshLayout = view.findViewById(R.id.swipe_refresh_layout);
-        swipeRefreshLayout.setOnRefreshListener(() -> {
-            // Reload data when user performs swipe-to-refresh
-            loadInitialData();
-        });
+        swipeRefreshLayout.setOnRefreshListener(this::loadInitialData);
+        searchEditText = view.findViewById(R.id.search_edit_text);
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-        String serverUrl = sharedPreferences.getString("server_url", "default_url");
-        String portString = sharedPreferences.getString("server_port", "3000");
-        if (!portString.isEmpty()) {
-            port = Integer.parseInt(portString);
-        } else {
-            port = 3000;
-        }
-        listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, searchAdapter, serverUrl, port);
-        AsyncTask.execute(() -> {
-            long count = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
-            listAnimeAPI.updateDatabase(count);
-            getActivity().runOnUiThread(() -> {
-                mAdapter.notifyDataSetChanged();
-                if (mAdapter.getItemCount() == 0) {
-                    showNoMangaMessage();
-                } else {
-                    hideNoMangaMessage();
-                }
-                loadMoreData();
+        String serverUrl = sharedPreferences.getString("server_url", "");
+        String portString = sharedPreferences.getString("server_port", "");
+        hideNoMangaMessage();
+        if (!serverUrl.isEmpty()) {
+            if (!portString.isEmpty()) {
+                port = Integer.parseInt(portString);
+            } else {
+                port = 3000;
+            }
+            listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, searchAdapter, serverUrl, port);
+            AsyncTask.execute(() -> {
+                long count = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
+                listAnimeAPI.updateDatabase(count);
+                getActivity().runOnUiThread(() -> {
+                    mAdapter.notifyDataSetChanged();
+                    if (mAdapter.getItemCount() == 0) {
+                        showNoMangaMessage();
+                    }
+                    loadMoreData();
+                });
             });
-        });
-
-        // Setup the EditText and TextWatcher
-        searchEditText = view.findViewById(R.id.search_edit_text);
-        searchEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // Not used
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Not used
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                String searchText = s.toString().trim();
-                if (!searchText.isEmpty()) {
-                    switchToSearchAdapter();
-                    listAnimeAPI.searchBooksFromDatabase(searchText, language);
-                } else {
-                    switchToMainAdapter();
-                    loadInitialData();
+            searchEditText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    // Not used
                 }
-            }
-        });
 
-        // Setup the flag buttons
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    // Not used
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    String searchText = s.toString().trim();
+                    if (!searchText.isEmpty()) {
+                        switchToSearchAdapter();
+                        listAnimeAPI.searchBooksFromDatabase(searchText, language);
+                    } else {
+                        switchToMainAdapter();
+                    }
+                }
+            });
+        }
+
         frenchButton = view.findViewById(R.id.french_button);
         englishButton = view.findViewById(R.id.english_button);
 
         frenchButton.setOnClickListener(v -> {
             isFrenchSelected = !isFrenchSelected;
             frenchButton.setImageResource(isFrenchSelected ? R.drawable.french_on : R.drawable.french_off);
-            updateLanguageList();
+            if (listAnimeAPI != null)
+                updateLanguageList();
         });
 
         englishButton.setOnClickListener(v -> {
             isEnglishSelected = !isEnglishSelected;
             englishButton.setImageResource(isEnglishSelected ? R.drawable.english_on : R.drawable.english_off);
-            updateLanguageList();
+            if (listAnimeAPI != null)
+                updateLanguageList();
         });
 
-        // Setup the settings button
         ImageButton settingsButton = view.findViewById(R.id.settings_button);
         settingsButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), SettingsActivity.class);
-            startActivity(intent);
+            startActivityForResult(intent, 100);
         });
 
-        // Setup the no manga message and change API button
-        noMangaMessage = view.findViewById(R.id.no_manga_message);
-        changeApiButton = view.findViewById(R.id.change_api_button);
         changeApiButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), SettingsActivity.class);
-            startActivity(intent);
+            startActivityForResult(intent, 100);
         });
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -171,63 +168,76 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
                 }
             }
         });
-
         updatelocalData();
     }
 
+
     private void loadInitialData() {
+        hideNoMangaMessage();
         AsyncTask.execute(() -> {
             long totalBooks = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
-            listAnimeAPI.updateDatabase(totalBooks);
-            getActivity().runOnUiThread(() -> {
+
+            if (listAnimeAPI != null) {
+                listAnimeAPI.updateDatabase(totalBooks);
+            } else {
+                requireActivity().runOnUiThread(() -> {
+                    showNoAPIMessage();
+                });
+                return;
+            }
+
+            requireActivity().runOnUiThread(() -> {
                 mAdapter.notifyDataSetChanged();
-                if (mAdapter.getItemCount() == 0) {
+                if (mAdapter.getItemCount() == 0)
                     showNoMangaMessage();
-                } else {
-                    hideNoMangaMessage();
-                }
-                loadMoreData();
-                swipeRefreshLayout.setRefreshing(false); // Stop the refreshing animation
+                else
+                    loadMoreData();
+                swipeRefreshLayout.setRefreshing(false);
             });
         });
     }
 
+
     private void updatelocalData() {
+        hideNoMangaMessage();
         currentPage = 0;
         mAdapter.clearBooks();
-        listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, 0, mAdapter, language);
-        getActivity().runOnUiThread(() -> {
-            mAdapter.notifyDataSetChanged();
-            if (mAdapter.getItemCount() == 0) {
-                showNoMangaMessage();
-            } else {
-                hideNoMangaMessage();
-            }
-        });
+
+        if (listAnimeAPI != null) {  // Check if listAnimeAPI is initialized
+            listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, 0, mAdapter, language);
+            requireActivity().runOnUiThread(() -> {
+                mAdapter.notifyDataSetChanged();
+                if (mAdapter.getItemCount() == 0) {
+                    showNoMangaMessage();
+                }
+            });
+        } else {
+            showNoAPIMessage();
+        }
     }
 
+
     private void loadMoreData() {
+        hideNoMangaMessage();
         int offset = currentPage * PAGE_SIZE;
         listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, offset, mAdapter, language);
-        getActivity().runOnUiThread(() -> {
+        requireActivity().runOnUiThread(() -> {
             mAdapter.notifyDataSetChanged();
             if (mAdapter.getItemCount() == 0) {
                 showNoMangaMessage();
-            } else {
-                hideNoMangaMessage();
             }
         });
         currentPage++;
     }
 
     private void switchToMainAdapter() {
-        RecyclerView mRecyclerView = getView().findViewById(R.id.recycler_view_books);
+        RecyclerView mRecyclerView = requireView().findViewById(R.id.recycler_view_books);
         mRecyclerView.setAdapter(mAdapter);
         mAdapter.notifyDataSetChanged();
     }
 
     private void switchToSearchAdapter() {
-        RecyclerView mRecyclerView = getView().findViewById(R.id.recycler_view_books);
+        RecyclerView mRecyclerView = requireView().findViewById(R.id.recycler_view_books);
         mRecyclerView.setAdapter(searchAdapter);
         searchAdapter.notifyDataSetChanged();
     }
@@ -247,7 +257,6 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
             listAnimeAPI.searchBooksFromDatabase(searchText, language);
         } else {
             switchToMainAdapter();
-            loadInitialData();
         }
         updatelocalData();
         mAdapter.notifyDataSetChanged();
@@ -256,6 +265,11 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
 
     private void showNoMangaMessage() {
         noMangaMessage.setVisibility(View.VISIBLE);
+        changeApiButton.setVisibility(View.VISIBLE);
+    }
+
+    private void showNoAPIMessage() {
+        noAPIMessage.setVisibility(View.VISIBLE);
         changeApiButton.setVisibility(View.VISIBLE);
     }
 

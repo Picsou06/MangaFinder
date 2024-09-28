@@ -4,10 +4,11 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import fr.picsou.mangafinder.R;
+import java.util.Objects;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -25,7 +26,7 @@ public class SettingsActivity extends AppCompatActivity {
         saveButton = findViewById(R.id.save_button);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("Settings");
 
         toolbar.setNavigationOnClickListener(v -> finish());
@@ -39,6 +40,10 @@ public class SettingsActivity extends AppCompatActivity {
             editor.putString("server_url", serverUrlEditText.getText().toString());
             editor.putString("server_port", serverPortEditText.getText().toString());
             editor.apply();
+
+            setResult(RESULT_OK);
+            finish();
         });
+
     }
 }

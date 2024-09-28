@@ -13,8 +13,13 @@ public interface BookDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertBooks(List<BookClass> books);
 
-    @Query("SELECT * FROM books WHERE title LIKE '%' || :searchText || '%' AND language IN (:languages) ORDER BY title")
+    @Query("SELECT * FROM books " +
+            "WHERE title LIKE :searchText || '%' " +
+            "AND language IN (:languages) " +
+            "ORDER BY LENGTH(title) - LENGTH(REPLACE(title, :searchText, '')) ASC, title " +
+            "LIMIT 50")
     List<BookClass> searchBooks(String searchText, List<String> languages);
+
 
     @Query("SELECT * FROM books WHERE language IN (:languages) ORDER BY title")
     List<BookClass> getAllBooks(List<String> languages);

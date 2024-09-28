@@ -1,21 +1,22 @@
 package fr.picsou.mangafinder;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
-import android.os.Bundle;
-import android.view.MenuItem;
-import android.widget.Toast;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.File;
 
-import fr.picsou.mangafinder.reader.MangaReaderListFragment;
 import fr.picsou.mangafinder.downloader.DownloaderFragment;
+import fr.picsou.mangafinder.reader.MangaReaderListFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -86,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     private void createMangaFinderFolder() {
         File MangaFinderDir = new File(getFilesDir(), "MangaFinder");
         if (!MangaFinderDir.exists()) {
@@ -97,7 +99,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public File getBaseFile(){
+    public File getBaseFile() {
         return getFilesDir();
+    }
+
+    // Méthode pour démarrer SettingsActivity et attendre un résultat
+    public void openSettingsActivity() {
+        Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+        startActivityForResult(intent, 100);
+    }
+
+    // Gestion des résultats de SettingsActivity
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 100 && resultCode == RESULT_OK) {
+            Fragment currentFragment = getSupportFragmentManager().findFragmentByTag("DownloaderFragment");
+            if (currentFragment != null) {
+                getSupportFragmentManager().beginTransaction()
+                        .remove(currentFragment)
+                        .replace(R.id.viewPager, new DownloaderFragment(), "DownloaderFragment")
+                        .commit();
+            }
+        }
     }
 }
