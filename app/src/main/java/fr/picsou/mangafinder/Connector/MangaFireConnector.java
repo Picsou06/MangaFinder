@@ -64,6 +64,7 @@ public class MangaFireConnector {
             try {
                 String id = mangaId.substring(mangaId.lastIndexOf('.') + 1);
                 URL url = new URL(API_BASE_URL + "chapter/" + id + "?language=" + language);
+                System.out.println(url);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
 

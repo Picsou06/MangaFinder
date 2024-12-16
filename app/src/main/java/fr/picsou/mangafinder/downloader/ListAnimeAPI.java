@@ -24,8 +24,8 @@ public class ListAnimeAPI {
     private final Context mContext;
     private final RecyclerView.Adapter mainAdapter;
     private final RecyclerView.Adapter searchAdapter;
-    private final String ip;
-    private final int port;
+    private String ip;
+    private int port;
     private final RequestQueue requestQueue;
     private final Handler mainHandler;
 
@@ -38,9 +38,14 @@ public class ListAnimeAPI {
         this.requestQueue = Volley.newRequestQueue(context.getApplicationContext());
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
+    public void updateLink(String newIp, int newPort) {
+        ip = newIp;
+        port = newPort;
+    }
 
     public void fetchAnimeListFromAPI() {
         String apiUrl = String.format(API_BASE_URL, ip, port) + "manga/listmanga/";
+        System.out.println(apiUrl);
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, apiUrl, null,
                 response -> {
@@ -107,12 +112,13 @@ public class ListAnimeAPI {
 
     public void updateDatabase(long numberOfValue) {
         String apiUrl = String.format(API_BASE_URL, ip, port) + "manga/isupdated/" + numberOfValue;
-        System.out.println("HELPER : " + apiUrl);
+        System.out.println("HELPER: " + apiUrl);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, apiUrl, null,
                 response -> {
                     try {
                         boolean isUpToDate = response.getBoolean("updated");
+                        System.out.println(isUpToDate);
                         if (!isUpToDate) {
                             fetchAnimeListFromAPI();
                         }
@@ -121,6 +127,7 @@ public class ListAnimeAPI {
                         Toast.makeText(mContext, "Erreur de parsing JSON: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }, error -> {
+            System.out.println(error.getMessage());
             Toast.makeText(mContext, "Erreur de mise à jour: " + error.getMessage(), Toast.LENGTH_SHORT).show();
         });
 
