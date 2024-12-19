@@ -18,6 +18,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 public class ListAnimeAPI {
     private static final String API_BASE_URL = "http://%s:%d/";
@@ -38,12 +39,13 @@ public class ListAnimeAPI {
         this.requestQueue = Volley.newRequestQueue(context.getApplicationContext());
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
+
     public void updateLink(String newIp, int newPort) {
         ip = newIp;
         port = newPort;
     }
 
-    public void fetchAnimeListFromAPI() {
+    public void fetchAnimeListFromAPI(CountDownLatch latch) {
         String apiUrl = String.format(API_BASE_URL, ip, port) + "manga/listmanga/";
         System.out.println(apiUrl);
 
@@ -66,12 +68,14 @@ public class ListAnimeAPI {
                         new Thread(() -> {
                             BookLocalDatabase.getDatabase(mContext).bookDao().DeleteAllBook();
                             BookLocalDatabase.getDatabase(mContext).bookDao().insertBooks(tempBookList);
-                        }).start();
+                            tempBookList.clear();
 
-                        mainHandler.post(() -> {
-                            mainAdapter.notifyDataSetChanged();
-                            Toast.makeText(mContext, "Données chargées avec succès", Toast.LENGTH_SHORT).show();
-                        });
+                            mainHandler.post(() -> {
+                                mainAdapter.notifyDataSetChanged();
+                                latch.countDown();
+                                Toast.makeText(mContext, "Données chargées avec succès", Toast.LENGTH_SHORT).show();
+                            });
+                        }).start();
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -81,8 +85,8 @@ public class ListAnimeAPI {
                     }
                 }, error -> {
             Toast.makeText(mContext, "Erreur lors du téléchargement: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            latch.countDown();
         });
-
         requestQueue.add(jsonArrayRequest);
     }
 
@@ -110,7 +114,7 @@ public class ListAnimeAPI {
         }).start();
     }
 
-    public void updateDatabase(long numberOfValue) {
+    public void updateDatabase(long numberOfValue, CountDownLatch latch) {
         String apiUrl = String.format(API_BASE_URL, ip, port) + "manga/isupdated/" + numberOfValue;
         System.out.println("HELPER: " + apiUrl);
 
@@ -118,19 +122,22 @@ public class ListAnimeAPI {
                 response -> {
                     try {
                         boolean isUpToDate = response.getBoolean("updated");
-                        System.out.println(isUpToDate);
+                        System.out.println("HELPER: " + isUpToDate);
                         if (!isUpToDate) {
-                            fetchAnimeListFromAPI();
+                            fetchAnimeListFromAPI(latch);
+                        } else {
+                            latch.countDown();
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                         Toast.makeText(mContext, "Erreur de parsing JSON: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        latch.countDown();
                     }
                 }, error -> {
             System.out.println(error.getMessage());
             Toast.makeText(mContext, "Erreur de mise à jour: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            latch.countDown();
         });
-
         requestQueue.add(jsonObjectRequest);
     }
 }

@@ -2,6 +2,7 @@
 
 package fr.picsou.mangafinder.downloader;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -26,9 +27,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 import fr.picsou.mangafinder.R;
 import fr.picsou.mangafinder.SettingsActivity;
+import java.util.concurrent.CountDownLatch;
 
 public class DownloaderFragment extends Fragment implements BookDownloaderAdapter.OnBookClickListener {
     private ListAnimeAPI listAnimeAPI;
@@ -93,7 +97,7 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
             listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, searchAdapter, serverUrl, port);
             AsyncTask.execute(() -> {
                 long count = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
-                listAnimeAPI.updateDatabase(count);
+                listAnimeAPI.updateDatabase(count, new CountDownLatch(1));
                 getActivity().runOnUiThread(() -> {
                     mAdapter.notifyDataSetChanged();
                     if (mAdapter.getItemCount() == 0) {
@@ -172,39 +176,55 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     }
 
 
+
     private void loadInitialData() {
         hideNoMangaMessage();
+        System.out.println("HELPER: Loading initial data");
+        hideNoAPIMessage();
         AsyncTask.execute(() -> {
-            hideNoMangaMessage();
             long totalBooks = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
-
-            if (listAnimeAPI != null)
-                listAnimeAPI.updateDatabase(totalBooks);
+            System.out.println("HELPER: Total books: " + totalBooks);
+            SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+            String serverUrl = sharedPreferences.getString("server_url", "");
+            String portString = sharedPreferences.getString("server_port", "");
+            if (!portString.isEmpty())
+                port = Integer.parseInt(portString);
             else
-            {
-                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
-                String serverUrl = sharedPreferences.getString("server_url", "");
-                String portString = sharedPreferences.getString("server_port", "");
-                if (!portString.isEmpty()) {
-                    port = Integer.parseInt(portString);
+                port = 3000;
+            if (!serverUrl.isEmpty()) {
+                if (listAnimeAPI == null) {
+                    listAnimeAPI = new ListAnimeAPI(requireContext(), mAdapter, searchAdapter, serverUrl, port);
                 }
-                listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, searchAdapter, serverUrl, port);
+                listAnimeAPI.updateLink(serverUrl, port);
+
+            CountDownLatch latch = new CountDownLatch(1);
+            listAnimeAPI.updateDatabase(totalBooks, latch);
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
 
             requireActivity().runOnUiThread(() -> {
                 mAdapter.notifyDataSetChanged();
+                searchAdapter.notifyDataSetChanged();
+                updateLanguageList();
                 if (mAdapter.getItemCount() == 0)
                     showNoMangaMessage();
                 else
                     loadMoreData();
                 swipeRefreshLayout.setRefreshing(false);
             });
+            } else {
+                requireActivity().runOnUiThread(this::showNoAPIMessage);
+            }
         });
     }
 
 
     private void updatelocalData() {
         hideNoMangaMessage();
+        hideNoAPIMessage();
         currentPage = 0;
         mAdapter.clearBooks();
 
@@ -224,10 +244,12 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
 
     private void loadMoreData() {
         hideNoMangaMessage();
+        hideNoAPIMessage();
         int offset = currentPage * PAGE_SIZE;
         listAnimeAPI.fetchBooksFromDatabase(PAGE_SIZE, offset, mAdapter, language);
         requireActivity().runOnUiThread(() -> {
             mAdapter.notifyDataSetChanged();
+            searchAdapter.notifyDataSetChanged();
             if (mAdapter.getItemCount() == 0) {
                 showNoMangaMessage();
             }
@@ -269,15 +291,31 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     }
 
     private void showNoMangaMessage() {
+        if (mAdapter.getItemCount() != 0)
+            mAdapter.clearBooks();
+        if (searchAdapter.getItemCount() != 0)
+            searchAdapter.clearBooks();
         noMangaMessage.setVisibility(View.VISIBLE);
+        changeApiButton.setVisibility(View.VISIBLE);
     }
 
     private void showNoAPIMessage() {
+        if (mAdapter.getItemCount() != 0)
+            mAdapter.clearBooks();
+        if (searchAdapter.getItemCount() != 0)
+            searchAdapter.clearBooks();
         noAPIMessage.setVisibility(View.VISIBLE);
+        changeApiButton.setVisibility(View.VISIBLE);
     }
 
     private void hideNoMangaMessage() {
         noMangaMessage.setVisibility(View.GONE);
+        changeApiButton.setVisibility(View.GONE);
+    }
+
+    private void hideNoAPIMessage() {
+        noAPIMessage.setVisibility(View.GONE);
+        changeApiButton.setVisibility(View.GONE);
     }
 
     public void onBookClick(BookClass book) {
