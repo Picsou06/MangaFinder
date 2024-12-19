@@ -175,15 +175,20 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     private void loadInitialData() {
         hideNoMangaMessage();
         AsyncTask.execute(() -> {
+            hideNoMangaMessage();
             long totalBooks = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
 
-            if (listAnimeAPI != null) {
+            if (listAnimeAPI != null)
                 listAnimeAPI.updateDatabase(totalBooks);
-            } else {
-                requireActivity().runOnUiThread(() -> {
-                    showNoAPIMessage();
-                });
-                return;
+            else
+            {
+                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
+                String serverUrl = sharedPreferences.getString("server_url", "");
+                String portString = sharedPreferences.getString("server_port", "");
+                if (!portString.isEmpty()) {
+                    port = Integer.parseInt(portString);
+                }
+                listAnimeAPI = new ListAnimeAPI(getContext(), mAdapter, searchAdapter, serverUrl, port);
             }
 
             requireActivity().runOnUiThread(() -> {
@@ -265,17 +270,14 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
 
     private void showNoMangaMessage() {
         noMangaMessage.setVisibility(View.VISIBLE);
-        changeApiButton.setVisibility(View.VISIBLE);
     }
 
     private void showNoAPIMessage() {
         noAPIMessage.setVisibility(View.VISIBLE);
-        changeApiButton.setVisibility(View.VISIBLE);
     }
 
     private void hideNoMangaMessage() {
         noMangaMessage.setVisibility(View.GONE);
-        changeApiButton.setVisibility(View.GONE);
     }
 
     public void onBookClick(BookClass book) {
