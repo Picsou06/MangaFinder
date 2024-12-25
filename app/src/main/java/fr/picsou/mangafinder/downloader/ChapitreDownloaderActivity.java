@@ -22,16 +22,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import fr.picsou.mangafinder.Connector.MangaFireConnector;
+import fr.picsou.mangafinder.Connector.APIConnector;
 import fr.picsou.mangafinder.R;
 import fr.picsou.mangafinder.reader.MangaViewer;
 
 public class ChapitreDownloaderActivity extends AppCompatActivity implements ChapterDownloaderAdapter.OnChapterClickListener {
     private ChapterDownloaderAdapter adapter;
-    private List<MangaFireConnector.Chapter> mangaChapters;
+    private List<APIConnector.Chapter> mangaChapters;
     private String language;
     private RecyclerView recyclerView;
-    private MangaFireConnector mangaFireConnector;
+    private APIConnector APIConnector;
     private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
@@ -71,7 +71,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
             adapter = new ChapterDownloaderAdapter(this, mangaChapters, this);
             recyclerView.setAdapter(adapter);
 
-            mangaFireConnector = new MangaFireConnector(this);
+            APIConnector = new APIConnector(this);
             loadChapters(id, coverUrl, MangaName);
         }
 
@@ -93,16 +93,16 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
     }
 
     private void loadChapters(String mangaId, String cover, String mangaName) {
-        mangaFireConnector.MangaFire_getChapters(mangaId, language, cover, mangaName, new MangaFireConnector.GetChaptersCallback() {
+        APIConnector.API_getChapters(mangaId, language, cover, mangaName, new APIConnector.GetChaptersCallback() {
             @Override
-            public void onChaptersLoaded(List<MangaFireConnector.Chapter> loadedChapters) {
+            public void onChaptersLoaded(List<APIConnector.Chapter> loadedChapters) {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         mangaChapters.clear();
                         mangaChapters.addAll(loadedChapters);
                         adapter.notifyDataSetChanged();
-                        swipeRefreshLayout.setRefreshing(false); // Stop the refreshing animation
+                        swipeRefreshLayout.setRefreshing(false);
                     }
                 });
             }
@@ -110,7 +110,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
     }
 
     @Override
-    public void onChapterClick(MangaFireConnector.Chapter chapter) {
+    public void onChapterClick(APIConnector.Chapter chapter) {
         if (chapter.isDownloaded()) {
             String chapterName = chapter.getTitle();
             File file = new File(getFilesDir(), "MangaFinder/" + language + "-" + chapter.getMangaName() + "/" + chapter.getTitle() + ".cbz");
@@ -122,7 +122,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
     }
 
     @Override
-    public void onDownloadClick(MangaFireConnector.Chapter chapter, String mangaTitle) {
+    public void onDownloadClick(APIConnector.Chapter chapter, String mangaTitle) {
         int position = mangaChapters.indexOf(chapter);
         if (position != -1) {
             View view = recyclerView.findViewHolderForAdapterPosition(position).itemView;
@@ -132,7 +132,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
             downloadButton.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.VISIBLE);
 
-            mangaFireConnector.MangaFire_getPages(chapter.getId(), new MangaFireConnector.GetPagesCallback() {
+            APIConnector.API_getPages(chapter.getId(), new APIConnector.GetPagesCallback() {
                 @Override
                 public void onPagesLoaded(List<String> pages) {
                     if (pages.isEmpty()) {

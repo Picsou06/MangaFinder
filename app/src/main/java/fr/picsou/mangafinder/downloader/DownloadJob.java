@@ -12,15 +12,15 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import fr.picsou.mangafinder.Connector.MangaFireConnector;
+import fr.picsou.mangafinder.Connector.APIConnector;
 
 public class DownloadJob {
-    private MangaFireConnector.Chapter chapter;
+    private APIConnector.Chapter chapter;
     private List<String> pageUrls;
     private DownloadCallback callback;
     private File basedir;
 
-    public DownloadJob(MangaFireConnector.Chapter chapter, List<String> pageUrls, DownloadCallback callback, File basedir) {
+    public DownloadJob(APIConnector.Chapter chapter, List<String> pageUrls, DownloadCallback callback, File basedir) {
         this.chapter = chapter;
         this.pageUrls = pageUrls;
         this.callback = callback;

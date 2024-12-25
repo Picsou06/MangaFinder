@@ -1,4 +1,4 @@
-// MangaFireConnector.java
+// APIConnector.java
 package fr.picsou.mangafinder.Connector;
 
 import android.content.Context;
@@ -17,14 +17,12 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import fr.picsou.mangafinder.downloader.BookClass;
-
-public class MangaFireConnector {
+public class APIConnector {
     private String API_BASE_URL;
     private final Context context;
     private final ExecutorService executorService;
 
-    public MangaFireConnector(Context context) {
+    public APIConnector(Context context) {
         this.context = context;
         this.executorService = Executors.newFixedThreadPool(4);
         updateApiBaseUrl();
@@ -38,7 +36,7 @@ public class MangaFireConnector {
         API_BASE_URL = String.format("http://%s:%d/", serverUrl, port);
     }
 
-    public void MangaFire_getChapters(String mangaId, String language, String cover, String MangaName, GetChaptersCallback callback) {
+    public void API_getChapters(String mangaId, String language, String cover, String MangaName, GetChaptersCallback callback) {
         updateApiBaseUrl();
         executorService.execute(new GetChaptersTask(mangaId, language, cover, MangaName, callback));
     }
@@ -98,7 +96,7 @@ public class MangaFireConnector {
         void onChaptersLoaded(List<Chapter> chapters);
     }
 
-    public void MangaFire_getPages(String chapterId, GetPagesCallback callback) {
+    public void API_getPages(String chapterId, GetPagesCallback callback) {
         updateApiBaseUrl();
         executorService.execute(new GetPagesTask(chapterId, callback));
     }

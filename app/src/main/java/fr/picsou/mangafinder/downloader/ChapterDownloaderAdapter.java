@@ -13,20 +13,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-import fr.picsou.mangafinder.Connector.MangaFireConnector;
+import fr.picsou.mangafinder.Connector.APIConnector;
 import fr.picsou.mangafinder.R;
 
 public class ChapterDownloaderAdapter extends RecyclerView.Adapter<ChapterDownloaderAdapter.ViewHolder> {
-    private final List<MangaFireConnector.Chapter> chapters;
+    private final List<APIConnector.Chapter> chapters;
     private final Context context;
     private final OnChapterClickListener listener;
 
     public interface OnChapterClickListener {
-        void onChapterClick(MangaFireConnector.Chapter chapter);
-        void onDownloadClick(MangaFireConnector.Chapter chapter, String mangaTitle);
+        void onChapterClick(APIConnector.Chapter chapter);
+        void onDownloadClick(APIConnector.Chapter chapter, String mangaTitle);
     }
 
-    public ChapterDownloaderAdapter(Context context, List<MangaFireConnector.Chapter> chapters, OnChapterClickListener listener) {
+    public ChapterDownloaderAdapter(Context context, List<APIConnector.Chapter> chapters, OnChapterClickListener listener) {
         this.context = context;
         this.chapters = chapters;
         this.listener = listener;
@@ -41,7 +41,7 @@ public class ChapterDownloaderAdapter extends RecyclerView.Adapter<ChapterDownlo
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        MangaFireConnector.Chapter chapter = chapters.get(position);
+        APIConnector.Chapter chapter = chapters.get(position);
         holder.chapterName.setText(chapter.getTitle());
         holder.itemView.setOnClickListener(v -> listener.onChapterClick(chapter));
         holder.actionbutton.setImageResource(R.drawable.ic_download_black);
@@ -61,7 +61,7 @@ public class ChapterDownloaderAdapter extends RecyclerView.Adapter<ChapterDownlo
         return chapters.size();
     }
 
-    public void updateChapterState(MangaFireConnector.Chapter chapter) {
+    public void updateChapterState(APIConnector.Chapter chapter) {
         int position = chapters.indexOf(chapter);
         if (position != -1) {
             notifyItemChanged(position);
