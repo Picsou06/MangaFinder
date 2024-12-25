@@ -39,7 +39,7 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     private BookDownloaderAdapter mAdapter;
     private BookDownloaderAdapter searchAdapter;
     private EditText searchEditText;
-    private int currentPage = 0;
+    private int currentPage = 1;
     private static final int PAGE_SIZE = 25;
     private List<String> language = new ArrayList<>(List.of("en", "fr"));
     private boolean isFrenchSelected = true;
@@ -177,11 +177,9 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
 
     private void loadInitialData() {
         hideNoMangaMessage();
-        System.out.println("HELPER: Loading initial data");
         hideNoAPIMessage();
         AsyncTask.execute(() -> {
             long totalBooks = BookLocalDatabase.getDatabase(getContext()).bookDao().CountValue();
-            System.out.println("HELPER: Total books: " + totalBooks);
             SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("AppSettings", Context.MODE_PRIVATE);
             String serverUrl = sharedPreferences.getString("server_url", "");
             String portString = sharedPreferences.getString("server_port", "");
@@ -223,7 +221,7 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
     private void updatelocalData() {
         hideNoMangaMessage();
         hideNoAPIMessage();
-        currentPage = 0;
+        currentPage = 1;
         mAdapter.clearBooks();
 
         if (listAnimeAPI != null) {  // Check if listAnimeAPI is initialized
@@ -320,6 +318,7 @@ public class DownloaderFragment extends Fragment implements BookDownloaderAdapte
         Intent intent = new Intent(getActivity(), ChapitreDownloaderActivity.class);
         intent.putExtra("cover", book.getImageUrl());
         intent.putExtra("MangaName", book.getTitle());
+        intent.putExtra("mangaId", book.getId());
         intent.putExtra("id", book.getId());
         intent.putExtra("language", book.getLanguage());
         startActivity(intent);

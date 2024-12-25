@@ -47,7 +47,6 @@ public class ListAnimeAPI {
 
     public void fetchAnimeListFromAPI(CountDownLatch latch) {
         String apiUrl = String.format(API_BASE_URL, ip, port) + "manga/listmanga/";
-        System.out.println(apiUrl);
 
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, apiUrl, null,
                 response -> {
@@ -116,13 +115,11 @@ public class ListAnimeAPI {
 
     public void updateDatabase(long numberOfValue, CountDownLatch latch) {
         String apiUrl = String.format(API_BASE_URL, ip, port) + "manga/isupdated/" + numberOfValue;
-        System.out.println("HELPER: " + apiUrl);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, apiUrl, null,
                 response -> {
                     try {
                         boolean isUpToDate = response.getBoolean("updated");
-                        System.out.println("HELPER: " + isUpToDate);
                         if (!isUpToDate) {
                             fetchAnimeListFromAPI(latch);
                         } else {

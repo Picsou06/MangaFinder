@@ -29,6 +29,7 @@ import fr.picsou.mangafinder.reader.MangaViewer;
 public class ChapitreDownloaderActivity extends AppCompatActivity implements ChapterDownloaderAdapter.OnChapterClickListener {
     private ChapterDownloaderAdapter adapter;
     private List<APIConnector.Chapter> mangaChapters;
+    private String mangaID;
     private String language;
     private RecyclerView recyclerView;
     private APIConnector APIConnector;
@@ -46,6 +47,8 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
 
         toolbar.setNavigationOnClickListener(v -> onBackPressed());
 
+        mangaID = getIntent().getStringExtra("mangaId");
+
         ImageView imageViewCover = findViewById(R.id.image_cover);
 
         Bundle args = getIntent().getExtras();
@@ -54,7 +57,6 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
             String MangaName = args.getString("MangaName", "");
             String id = args.getString("id", "");
             language = args.getString("language", "en");
-            System.out.println("HELPER,  information when chapter open: " + coverUrl + " " + MangaName + " " + id + " " + language);
 
             if (coverUrl != null && !coverUrl.isEmpty()) {
                 Glide.with(this)
@@ -132,7 +134,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
             downloadButton.setVisibility(View.INVISIBLE);
             progressBar.setVisibility(View.VISIBLE);
 
-            APIConnector.API_getPages(chapter.getId(), new APIConnector.GetPagesCallback() {
+            APIConnector.API_getPages(chapter.getId(), mangaID, new APIConnector.GetPagesCallback() {
                 @Override
                 public void onPagesLoaded(List<String> pages) {
                     if (pages.isEmpty()) {

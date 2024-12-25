@@ -62,7 +62,6 @@ public class APIConnector {
             try {
                 String id = mangaId.substring(mangaId.lastIndexOf('.') + 1);
                 URL url = new URL(API_BASE_URL + "chapter/" + id + "?language=" + language);
-                System.out.println(url);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
 
@@ -96,17 +95,19 @@ public class APIConnector {
         void onChaptersLoaded(List<Chapter> chapters);
     }
 
-    public void API_getPages(String chapterId, GetPagesCallback callback) {
+    public void API_getPages(String chapterId, String MangaId, GetPagesCallback callback) {
         updateApiBaseUrl();
-        executorService.execute(new GetPagesTask(chapterId, callback));
+        executorService.execute(new GetPagesTask(chapterId, MangaId, callback));
     }
 
     private class GetPagesTask implements Runnable {
         private final String chapterId;
+        private final String mangaId;
         private final GetPagesCallback callback;
 
-        public GetPagesTask(String chapterId, GetPagesCallback callback) {
+        public GetPagesTask(String chapterId, String mangaId, GetPagesCallback callback) {
             this.chapterId = chapterId;
+            this.mangaId = mangaId;
             this.callback = callback;
         }
 
@@ -114,7 +115,7 @@ public class APIConnector {
         public void run() {
             List<String> pages = new ArrayList<>();
             try {
-                URL url = new URL(API_BASE_URL + "page/" + chapterId);
+                URL url = new URL(API_BASE_URL + "page/" + chapterId + "?mangaId=" + mangaId);
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
 
