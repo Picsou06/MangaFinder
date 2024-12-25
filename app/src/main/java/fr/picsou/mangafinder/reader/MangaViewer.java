@@ -11,12 +11,14 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -24,17 +26,22 @@ import fr.picsou.mangafinder.R;
 
 public class MangaViewer extends AppCompatActivity {
     private static final String TAG = "MangaReaderActivity";
-    private static final int IMAGES_PER_LOAD = 20;
+    private static final int IMAGES_PER_LOAD = 50;
 
     private List<Bitmap> images;
     private ImageAdapter adapter;
     private RecyclerView recyclerView;
     private boolean isLoading = false;
 
+    private ExecutorService executorService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manga_reader);
+
+        // Initialiser l'exécuteur pour le chargement en arrière-plan
+        executorService = Executors.newFixedThreadPool(2);
 
         Intent intent = getIntent();
         String mangaName = intent.getStringExtra("MANGA_NAME");
@@ -59,8 +66,16 @@ public class MangaViewer extends AppCompatActivity {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
-                if (!isLoading && !recyclerView.canScrollVertically(1)) {
-                    loadImages(cbzFilePath, images.size(), images.size() + IMAGES_PER_LOAD);
+
+                LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
+                if (layoutManager != null && !isLoading) {
+                    int visibleItemCount = layoutManager.getChildCount();
+                    int totalItemCount = layoutManager.getItemCount();
+                    int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
+
+                    if ((totalItemCount - visibleItemCount - firstVisibleItemPosition) <= 20) {
+                        loadImages(cbzFilePath, images.size(), images.size() + IMAGES_PER_LOAD);
+                    }
                 }
             }
         });
@@ -68,28 +83,103 @@ public class MangaViewer extends AppCompatActivity {
 
     private void loadImages(String cbzFilePath, int startIndex, int endIndex) {
         isLoading = true;
-        try {
-            extractImages(cbzFilePath, startIndex, endIndex);
+
+        executorService.execute(() -> {
+            try {
+                // Vérifier s'il reste des images à charger
+                if (hasMoreImages(cbzFilePath, startIndex)) {
+                    extractImages(cbzFilePath, startIndex, endIndex);
+                } else {
+                    runOnUiThread(() -> isLoading = false); // Réinitialiser l'état
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Erreur lors de l'extraction des images du fichier CBZ", e);
+                runOnUiThread(() -> isLoading = false);
+            }
+        });
+    }
+
+    private boolean hasMoreImages(String cbzFilePath, int startIndex) {
+        try (InputStream fis = new FileInputStream(cbzFilePath);
+             ZipInputStream zis = new ZipInputStream(fis)) {
+
+            ZipEntry ze;
+            int index = 0;
+
+            while ((ze = zis.getNextEntry()) != null) {
+                if (!ze.isDirectory() && index >= startIndex) {
+                    return true;
+                }
+                index++;
+            }
         } catch (IOException e) {
-            Log.e(TAG, "Erreur lors de l'extraction des images du fichier CBZ", e);
+            Log.e(TAG, "Erreur lors de la vérification des pages restantes", e);
+        }
+        return false;
+    }
+
+    private Bitmap decodeSampledBitmapFromStream(InputStream inputStream, int reqWidth, int reqHeight) {
+        try {
+            byte[] imageData = toByteArray(inputStream);
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            BitmapFactory.decodeByteArray(imageData, 0, imageData.length, options);
+
+            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+            options.inJustDecodeBounds = false;
+
+            return BitmapFactory.decodeByteArray(imageData, 0, imageData.length, options);
+        } catch (IOException e) {
+            Log.e(TAG, "Erreur lors du décodage de l'image", e);
+            return null;
         }
     }
 
+    private byte[] toByteArray(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[8192];
+        int nRead;
+        while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        buffer.flush();
+        return buffer.toByteArray();
+    }
+
+    private int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        int height = options.outHeight;
+        int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+        return inSampleSize;
+    }
+
     private void extractImages(String cbzFilePath, int startIndex, int endIndex) throws IOException {
+        List<Bitmap> newImages = new ArrayList<>();
         try (InputStream fis = new FileInputStream(cbzFilePath);
              ZipInputStream zis = new ZipInputStream(fis)) {
+
             ZipEntry ze;
             int index = 0;
             while ((ze = zis.getNextEntry()) != null) {
                 if (!ze.isDirectory() && index >= startIndex && index < endIndex) {
-                    Bitmap bm = BitmapFactory.decodeStream(zis);
+                    Bitmap bm = decodeSampledBitmapFromStream(zis, 800, 1200);
                     if (bm != null) {
-                        images.add(bm);
+                        newImages.add(bm);
                     }
                 }
                 index++;
                 if (index >= endIndex) {
-                    break; // On a chargé suffisamment d'images
+                    break;
                 }
             }
         } catch (IOException e) {
@@ -97,7 +187,25 @@ public class MangaViewer extends AppCompatActivity {
             throw e;
         }
 
-        adapter.notifyDataSetChanged(); // Notifier l'adapter que les données ont changé
-        isLoading = false; // Fin de la charge
+        // Mettre à jour les images dans le thread principal
+        runOnUiThread(() -> {
+            images.addAll(newImages);
+            adapter.notifyDataSetChanged();
+            isLoading = false;
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+        }
+        for (Bitmap bitmap : images) {
+            if (bitmap != null && !bitmap.isRecycled()) {
+                bitmap.recycle();
+            }
+        }
+        images.clear();
     }
 }
