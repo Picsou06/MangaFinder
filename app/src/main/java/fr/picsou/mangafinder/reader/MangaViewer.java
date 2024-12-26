@@ -40,7 +40,6 @@ public class MangaViewer extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manga_reader);
 
-        // Initialiser l'exécuteur pour le chargement en arrière-plan
         executorService = Executors.newFixedThreadPool(2);
 
         Intent intent = getIntent();
@@ -186,7 +185,6 @@ public class MangaViewer extends AppCompatActivity {
             throw e;
         }
 
-        // Mettre à jour les images dans le thread principal
         runOnUiThread(() -> {
             images.addAll(newImages);
             adapter.notifyDataSetChanged();

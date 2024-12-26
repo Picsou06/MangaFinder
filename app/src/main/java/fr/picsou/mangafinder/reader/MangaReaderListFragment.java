@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -97,12 +98,19 @@ public class MangaReaderListFragment extends Fragment {
 
 
     private void toggleImportMenu() {
+        FrameLayout overlay = view.findViewById(R.id.import_menu_overlay);
+
         if (importMenuLayout.getVisibility() == View.VISIBLE) {
             importMenuLayout.setVisibility(View.GONE);
+            overlay.setVisibility(View.GONE);
+            overlay.setOnClickListener(null); // Retire l'action de clic
         } else {
-            refreshBookList();
             importMenuLayout.setVisibility(View.VISIBLE);
+            overlay.setVisibility(View.VISIBLE);
+            overlay.bringToFront();
             importMenuLayout.bringToFront();
+
+            overlay.setOnClickListener(v -> toggleImportMenu());
         }
     }
 
