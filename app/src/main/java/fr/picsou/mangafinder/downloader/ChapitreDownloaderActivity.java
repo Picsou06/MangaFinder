@@ -82,7 +82,6 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                // Reload chapters
                 Bundle args = getIntent().getExtras();
                 if (args != null) {
                     String id = args.getString("id", "");
@@ -90,6 +89,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
                     String MangaName = args.getString("MangaName", "");
                     loadChapters(id, coverUrl, MangaName);
                 }
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
     }
@@ -113,7 +113,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
 
     @Override
     public void onChapterClick(APIConnector.Chapter chapter) {
-        if (chapter.isDownloaded()) {
+        if (chapter.isDownloaded(this)) {
             String chapterName = chapter.getTitle();
             File file = new File(getFilesDir(), "MangaFinder/" + language + "-" + chapter.getMangaName() + "/" + chapter.getTitle() + ".cbz");
             Intent intent = new Intent(ChapitreDownloaderActivity.this, MangaViewer.class);
@@ -132,6 +132,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
             ProgressBar progressBar = view.findViewById(R.id.progress_bar);
 
             downloadButton.setVisibility(View.INVISIBLE);
+            progressBar.setIndeterminate(true);
             progressBar.setVisibility(View.VISIBLE);
 
             APIConnector.API_getPages(chapter.getId(), mangaID, new APIConnector.GetPagesCallback() {
@@ -152,7 +153,6 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
                             runOnUiThread(() -> {
                                 progressBar.setVisibility(View.GONE);
                                 Toast.makeText(ChapitreDownloaderActivity.this, "Download completed", Toast.LENGTH_SHORT).show();
-                                chapter.setDownloaded(true);
                                 adapter.updateChapterState(chapter);
                             });
                         }
@@ -163,6 +163,14 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
                                 progressBar.setVisibility(View.GONE);
                                 downloadButton.setVisibility(View.VISIBLE);
                                 Toast.makeText(ChapitreDownloaderActivity.this, "Download failed: " + message, Toast.LENGTH_SHORT).show();
+                            });
+                        }
+
+                        @Override
+                        public void onProgressUpdate(int progress) {
+                            runOnUiThread(() -> {
+                                progressBar.setIndeterminate(false);
+                                progressBar.setProgress(progress);
                             });
                         }
                     }, getFilesDir());

@@ -61,6 +61,13 @@ public class DownloadJob {
         }
 
         @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            int progress = values[0];
+            callback.onProgressUpdate(progress);
+        }
+
+        @Override
         protected void onPostExecute(Boolean success) {
             if (success) {
                 callback.onDownloadCompleted();
@@ -112,6 +119,9 @@ public class DownloadJob {
 
                         zos.closeEntry();
                     }
+
+                    // Report progress
+                    publishProgress((i + 1) * 100 / pages.size());
                 }
 
                 return true;
@@ -122,5 +132,7 @@ public class DownloadJob {
     public interface DownloadCallback {
         void onDownloadCompleted();
         void onDownloadFailed(String message);
+
+        void onProgressUpdate(int progress);
     }
 }

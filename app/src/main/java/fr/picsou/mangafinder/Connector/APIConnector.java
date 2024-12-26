@@ -9,6 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -153,7 +154,6 @@ public class APIConnector {
         private String language;
         private String imageURL;
         private String mangaName;
-        private boolean isDownloaded;
 
         public Chapter(String id, String type, String title, String language, String imageURL, String mangaName) {
             this.id = id;
@@ -162,7 +162,6 @@ public class APIConnector {
             this.language = language;
             this.imageURL = imageURL;
             this.mangaName = mangaName;
-            this.isDownloaded = false;
         }
 
         public String getId() {
@@ -189,12 +188,9 @@ public class APIConnector {
             return mangaName;
         }
 
-        public boolean isDownloaded() {
-            return isDownloaded;
-        }
-
-        public void setDownloaded(boolean downloaded) {
-            isDownloaded = downloaded;
+        public boolean isDownloaded(Context context) {
+            File file = new File(context.getFilesDir(), "MangaFinder/" + language + "-" + mangaName + "/" + title + ".cbz");
+            return file.exists();
         }
     }
 }

@@ -26,7 +26,7 @@ import fr.picsou.mangafinder.R;
 
 public class MangaViewer extends AppCompatActivity {
     private static final String TAG = "MangaReaderActivity";
-    private static final int IMAGES_PER_LOAD = 50;
+    private static final int IMAGES_PER_LOAD = 20;
 
     private List<Bitmap> images;
     private ImageAdapter adapter;
@@ -60,7 +60,7 @@ public class MangaViewer extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        loadImages(cbzFilePath, 0, IMAGES_PER_LOAD);
+        loadImages(cbzFilePath, 0, 10);
 
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -73,7 +73,7 @@ public class MangaViewer extends AppCompatActivity {
                     int totalItemCount = layoutManager.getItemCount();
                     int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
 
-                    if ((totalItemCount - visibleItemCount - firstVisibleItemPosition) <= 20) {
+                    if ((totalItemCount - visibleItemCount - firstVisibleItemPosition) <= 10) {
                         loadImages(cbzFilePath, images.size(), images.size() + IMAGES_PER_LOAD);
                     }
                 }
@@ -86,11 +86,10 @@ public class MangaViewer extends AppCompatActivity {
 
         executorService.execute(() -> {
             try {
-                // Vérifier s'il reste des images à charger
                 if (hasMoreImages(cbzFilePath, startIndex)) {
                     extractImages(cbzFilePath, startIndex, endIndex);
                 } else {
-                    runOnUiThread(() -> isLoading = false); // Réinitialiser l'état
+                    runOnUiThread(() -> isLoading = false);
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Erreur lors de l'extraction des images du fichier CBZ", e);

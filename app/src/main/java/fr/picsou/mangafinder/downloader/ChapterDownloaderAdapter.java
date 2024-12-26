@@ -46,7 +46,7 @@ public class ChapterDownloaderAdapter extends RecyclerView.Adapter<ChapterDownlo
         holder.itemView.setOnClickListener(v -> listener.onChapterClick(chapter));
         holder.actionbutton.setImageResource(R.drawable.ic_download_black);
 
-        if (chapter.isDownloaded()) {
+        if (chapter.isDownloaded(this.context)) {
             holder.actionbutton.setVisibility(View.GONE);
             holder.progressBar.setVisibility(View.GONE);
         } else {
