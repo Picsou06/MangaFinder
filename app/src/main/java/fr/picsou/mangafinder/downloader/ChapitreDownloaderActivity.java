@@ -152,6 +152,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
                         public void onDownloadCompleted() {
                             runOnUiThread(() -> {
                                 progressBar.setVisibility(View.GONE);
+
                                 Toast.makeText(ChapitreDownloaderActivity.this, "Download completed", Toast.LENGTH_SHORT).show();
                                 adapter.updateChapterState(chapter);
                             });

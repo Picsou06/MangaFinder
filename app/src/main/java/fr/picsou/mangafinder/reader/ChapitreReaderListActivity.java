@@ -13,6 +13,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
 
@@ -27,6 +28,7 @@ import fr.picsou.mangafinder.R;
 public class ChapitreReaderListActivity extends AppCompatActivity implements ChapterReaderAdapter.OnChapterClickListener {
     private ChapterReaderAdapter adapter;
     private List<File> chapterFiles;
+    private SwipeRefreshLayout swipeRefreshLayout;
     String language;
 
     @SuppressLint("ResourceType")
@@ -34,6 +36,7 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chapitre_selector);
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -82,7 +85,17 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
 
             adapter = new ChapterReaderAdapter(this, chapterFiles, this);
             recyclerView.setAdapter(adapter);
+
+            swipeRefreshLayout.setOnRefreshListener(() -> reloadChapterFiles(MangaName));
         }
+    }
+
+    private void reloadChapterFiles(String MangaName) {
+        System.out.println("Reloading chapters");
+        chapterFiles = getChapterFiles(MangaName);
+        adapter.setChapters(chapterFiles);
+        adapter.notifyDataSetChanged();
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     private List<File> getChapterFiles(String MangaName) {

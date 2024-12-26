@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -42,18 +44,24 @@ public class DownloadJob {
         protected Boolean doInBackground(Void... voids) {
             try {
                 // Create directory for the manga
-                File mangaDir = new File(basedir, "MangaFinder/" + chapter.getLanguage() + "-" + chapter.getMangaName());
+                //File mangaDir = new File(basedir, "MangaFinder/" + chapter.getLanguage() + "-" + chapter.getMangaName());
+                File mangaDir = new File(basedir, "Downlodable/");
                 if (!mangaDir.exists()) {
                     if (!mangaDir.mkdirs()) {
-                        return false; // Failed to create directory
+                        return false;
                     }
                 }
 
-                // Download cover image
                 downloadCoverImage(chapter.getImageURL(), mangaDir);
 
-                // Create CBZ archive
-                return createCBZArchive(pageUrls, mangaDir, chapter.getTitle());
+                // Download all pages first
+                List<File> downloadedPages = downloadAllPages(pageUrls, mangaDir);
+                if (downloadedPages.size() != pageUrls.size()) {
+                    return false;
+                }
+
+                // Create CBZ after all pages are downloaded
+                return createCBZArchive(downloadedPages, mangaDir, chapter.getTitle());
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;
@@ -95,33 +103,53 @@ public class DownloadJob {
             }
         }
 
-        private boolean createCBZArchive(List<String> pages, File mangaDir, String chapterName) throws Exception {
+        private List<File> downloadAllPages(List<String> pages, File mangaDir) throws Exception {
+            List<File> downloadedPages = new ArrayList<>();
+            byte[] buffer = new byte[4096];
+
+            for (int i = 0; i < pages.size(); i++) {
+                String pageUrl = pages.get(i);
+                URL url = new URL(pageUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.connect();
+
+                File pageFile = new File(mangaDir, "page_" + (i + 1) + ".jpg");
+                try (FileOutputStream fos = new FileOutputStream(pageFile);
+                     InputStream in = connection.getInputStream()) {
+                    int bytesRead;
+                    while ((bytesRead = in.read(buffer)) != -1) {
+                        fos.write(buffer, 0, bytesRead);
+                    }
+                }
+
+                downloadedPages.add(pageFile);
+
+                // Report progress
+                publishProgress((i + 1) * 100 / pages.size());
+            }
+
+            return downloadedPages;
+        }
+
+        private boolean createCBZArchive(List<File> pages, File mangaDir, String chapterName) throws Exception {
             File cbzFile = new File(mangaDir, chapterName + ".cbz");
             try (FileOutputStream fos = new FileOutputStream(cbzFile);
                  ZipOutputStream zos = new ZipOutputStream(fos)) {
 
                 byte[] buffer = new byte[1024];
 
-                for (int i = 0; i < pages.size(); i++) {
-                    String pageUrl = pages.get(i);
-                    URL url = new URL(pageUrl);
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    connection.connect();
-
-                    try (InputStream in = connection.getInputStream()) {
-                        zos.putNextEntry(new ZipEntry("page_" + (i + 1) + ".jpg"));
+                for (File page : pages) {
+                    try (FileInputStream fis = new FileInputStream(page)) {
+                        zos.putNextEntry(new ZipEntry(page.getName()));
 
                         int len;
-                        while ((len = in.read(buffer)) > 0) {
+                        while ((len = fis.read(buffer)) > 0) {
                             zos.write(buffer, 0, len);
                         }
 
                         zos.closeEntry();
                     }
-
-                    // Report progress
-                    publishProgress((i + 1) * 100 / pages.size());
                 }
 
                 return true;

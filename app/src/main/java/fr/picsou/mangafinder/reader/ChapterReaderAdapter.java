@@ -47,6 +47,12 @@ public class ChapterReaderAdapter extends RecyclerView.Adapter<ChapterReaderAdap
         holder.deleteButton.setOnClickListener(v -> listener.onDeleteClick(chapter));
     }
 
+    public void setChapters(List<File> chapters) {
+        this.chapters.clear();
+        this.chapters.addAll(chapters);
+        notifyDataSetChanged();
+    }
+
     @Override
     public int getItemCount() {
         return chapters.size();
