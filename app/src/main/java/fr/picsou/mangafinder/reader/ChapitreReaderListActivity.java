@@ -123,19 +123,24 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
     @SuppressLint("NotifyDataSetChanged")
     @Override
     public void onDeleteClick(File chapter) {
-        if (chapter.delete()) {
-            chapterFiles.remove(chapter);
-            if (adapter.getItemCount() == 0) {
-                boolean deleted = deleteAnimeFolder();
-                if (deleted) {
-                    MangaReaderListFragment.refreshBookList();
-                    finish();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Confirmation");
+        builder.setMessage("Voulez-vous vraiment supprimer ce chapitre ?");
+        builder.setPositiveButton("Oui", (dialog, which) -> {
+            if (chapter.delete()) {
+                chapterFiles.remove(chapter);
+                adapter.notifyDataSetChanged();
+                if (adapter.getItemCount() == 0) {
+                    boolean deleted = deleteAnimeFolder();
+                    if (deleted) {
+                        MangaReaderListFragment.refreshBookList();
+                        finish();
+                    }
                 }
             }
-            if (adapter != null) {
-                adapter.notifyDataSetChanged();
-            }
-        }
+        });
+        builder.setNegativeButton("Non", (dialog, which) -> dialog.dismiss());
+        builder.show();
     }
 
     public void deleteAnime(View view) {
