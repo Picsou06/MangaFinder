@@ -1,9 +1,13 @@
 package fr.picsou.mangafinder;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -34,6 +38,13 @@ public class SettingsActivity extends AppCompatActivity {
         SharedPreferences preferences = getSharedPreferences("AppSettings", MODE_PRIVATE);
         serverUrlEditText.setText(preferences.getString("server_url", ""));
         serverPortEditText.setText(preferences.getString("server_port", ""));
+
+        TextView privacyPolicyTextView = findViewById(R.id.textView);
+        privacyPolicyTextView.setMovementMethod(LinkMovementMethod.getInstance());
+        privacyPolicyTextView.setOnClickListener(v -> {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://picsou06.fr/PPC/MangaFinder/"));
+            startActivity(browserIntent);
+        });
 
         saveButton.setOnClickListener(v -> {
             SharedPreferences.Editor editor = preferences.edit();

@@ -61,4 +61,16 @@
         android:text="@string/save"
         android:layout_marginTop="16dp"
         android:layout_gravity="center"/>
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textAlignment="center"
+        android:textColor="@color/recherche"
+        android:text="@string/privacy_policy"
+        android:autoLink="web"
+        android:linksClickable="true"
+        android:textStyle="underline" />
 </LinearLayout>

@@ -25,6 +25,7 @@
     <string name="nsfw">NSFW</string>
     <string name="save">Save</string>
     <string name="vous_n_avez_pas_definit_d_api_pour_le_moment">Vous n\'avez pas definit d\'API pour le moment.</string>
+    <string name="privacy_policy">Politique de Confidentialité</string>
     <string-array name="languages_array">
         <item>fr</item>
         <item>en</item>
