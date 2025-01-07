@@ -72,5 +72,8 @@
         android:text="@string/privacy_policy"
         android:autoLink="web"
         android:linksClickable="true"
-        android:textStyle="underline" />
+        android:textStyle="bold"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true" />
 </LinearLayout>
