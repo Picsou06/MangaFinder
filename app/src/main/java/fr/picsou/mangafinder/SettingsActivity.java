@@ -39,16 +39,23 @@ public class SettingsActivity extends AppCompatActivity {
         serverUrlEditText.setText(preferences.getString("server_url", ""));
         serverPortEditText.setText(preferences.getString("server_port", ""));
 
-        TextView privacyPolicyTextView = findViewById(R.id.textView);
+        TextView privacyPolicyTextView = findViewById(R.id.privacy_policy);
         privacyPolicyTextView.setMovementMethod(LinkMovementMethod.getInstance());
         privacyPolicyTextView.setOnClickListener(v -> {
             Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://picsou06.fr/PPC/MangaFinder/"));
             startActivity(browserIntent);
         });
 
+        TextView APIHelpTextView = findViewById(R.id.APIHELP);
+        APIHelpTextView.setMovementMethod(LinkMovementMethod.getInstance());
+        APIHelpTextView.setOnClickListener(v -> {
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Picsou06/MangaFinderAPI/blob/main/README.md"));
+            startActivity(browserIntent);
+        });
+
         saveButton.setOnClickListener(v -> {
             SharedPreferences.Editor editor = preferences.edit();
-            editor.putString("server_url", serverUrlEditText.getText().toString());
+            editor.putString("server_url", serverUrlEditText.getText().toString().replaceFirst("^(http://|https://)", ""));
             editor.putString("server_port", serverPortEditText.getText().toString());
             editor.apply();
 

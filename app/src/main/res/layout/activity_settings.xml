@@ -63,13 +63,28 @@
         android:layout_gravity="center"/>
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/privacy_policy"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:textAlignment="center"
         android:textColor="@color/recherche"
         android:text="@string/privacy_policy"
+        android:autoLink="web"
+        android:linksClickable="true"
+        android:textStyle="bold"
+        android:background="?android:attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <TextView
+        android:id="@+id/APIHELP"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textAlignment="center"
+        android:textColor="@color/recherche"
+        android:text="@string/h_berger_votre_api"
         android:autoLink="web"
         android:linksClickable="true"
         android:textStyle="bold"
