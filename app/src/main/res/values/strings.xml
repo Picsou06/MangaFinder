@@ -19,7 +19,7 @@
     <string name="aucun_fichier_s_lectionn">Aucun fichier sélectionné</string>
     <string name="importer">Importer</string>
     <string name="settings">Settings</string>
-    <string name="search_waiting">Search...</string>
+    <string name="search_waiting">Click to search!</string>
     <string name="french">French</string>
     <string name="english">English</string>
     <string name="nsfw">NSFW</string>

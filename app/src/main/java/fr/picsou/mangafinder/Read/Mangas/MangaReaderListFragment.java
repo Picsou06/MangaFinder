@@ -158,28 +158,19 @@ public class MangaReaderListFragment extends Fragment {
     private void refreshBookListInternal() {
         swipeRefreshLayout.setRefreshing(true);
         bookList = getListOfBooks();
-        TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
-        if (bookList == null || bookList.isEmpty()) {
-            textViewEmpty.setVisibility(View.VISIBLE);
-            recyclerView.setVisibility(View.GONE);
+
+        if (bookList.isEmpty()) {
+            view.findViewById(R.id.text_view_empty).setVisibility(View.VISIBLE);
+            view.findViewById(R.id.recycler_view_books).setVisibility(View.GONE);
         } else {
-            textViewEmpty.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.VISIBLE);
+            view.findViewById(R.id.text_view_empty).setVisibility(View.GONE);
+            view.findViewById(R.id.recycler_view_books).setVisibility(View.VISIBLE);
 
-            bookAdapter = new BookReaderAdapter(getContext(), bookList);
-            recyclerView.setAdapter(bookAdapter);
-
-            bookAdapter.setOnBookClickListener(this::openChapitreSelectorActivity);
-        }
-
-        List<BookReaderClass> bookList = getListOfBooks();
-        if (bookAdapter != null) {
             bookAdapter.clearBooks();
             bookAdapter.updateBooks(bookList);
+
+            bookAdapter.setOnBookClickListener(this::openChapitreSelectorActivity);
             bookAdapter.notifyDataSetChanged();
-        } else {
-            bookAdapter = new BookReaderAdapter(getContext(), bookList);
-            recyclerView.setAdapter(bookAdapter);
         }
         swipeRefreshLayout.setRefreshing(false);
     }
@@ -206,6 +197,14 @@ public class MangaReaderListFragment extends Fragment {
                     continue;
                 }
                 bookList.add(db.bookDao().getBookById(chapter.getBookId()));
+            }
+            for (BookReaderClass book : bookList) {
+                File mangaDir = new File(getContext().getFilesDir(), "MangaFinder/" + book.getLanguage() + "-" + book.getTitle());
+                System.out.println(mangaDir.getAbsolutePath());
+                File cover = new File(mangaDir, "cover.jpg");
+                if (cover.exists()) {
+                    book.setImageCover(cover.getAbsolutePath());
+                }
             }
             latch.countDown();
         }).start();
