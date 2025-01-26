@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.downloader;
+package fr.picsou.mangafinder.Download.Mangas;
 
 import android.content.Context;
 import android.util.Log;

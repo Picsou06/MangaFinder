@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.downloader;
+package fr.picsou.mangafinder.Download.Chapters;
 
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import fr.picsou.mangafinder.BookLocalDatabase;
 import fr.picsou.mangafinder.Connector.APIConnector;
+import fr.picsou.mangafinder.Read.Chapters.ChapterClass;
 
 public class DownloadJob {
     private APIConnector.Chapter chapter;
@@ -67,6 +69,12 @@ public class DownloadJob {
         @Override
         protected void onPostExecute(Boolean success) {
             if (success) {
+                new Thread(() -> {
+                    BookLocalDatabase db = BookLocalDatabase.getDatabase(null);
+                    String path = "MangaFinder/" + chapter.getLanguage() + "-" + chapter.getMangaName() + "/" + chapter.getTitle() + ".cbz";
+                    ChapterClass chapter = new ChapterClass(DownloadJob.this.chapter.getTitle(), path, DownloadJob.this.chapter.getMangaId(), false, 0);
+                    db.chapterDao().insertChapter(chapter);
+                }).start();
                 callback.onDownloadCompleted();
             } else {
                 callback.onDownloadFailed("Failed to download or create CBZ file");

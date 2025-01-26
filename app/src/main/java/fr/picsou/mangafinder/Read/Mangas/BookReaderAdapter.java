@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.reader;
+package fr.picsou.mangafinder.Read.Mangas;
 
 import android.content.Context;
 import android.util.Log;
@@ -25,7 +25,6 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
     }
 
     public void setOnBookClickListener(OnBookClickListener listener) {
-        Log.d("BookSearchAdapter", "Listener Enabled");
         mListener = listener;
     }
 
@@ -64,14 +63,12 @@ public class BookReaderAdapter extends RecyclerView.Adapter<BookReaderAdapter.Bo
 
         holder.book1Container.setOnClickListener(v -> {
             if (mListener != null && firstBookIndex < mBookList.size()) {
-                Log.d("BookSearchAdapter", "First book clicked at position " + firstBookIndex);
                 mListener.onBookClick(mBookList.get(firstBookIndex));
             }
         });
 
         holder.book2Container.setOnClickListener(v -> {
             if (mListener != null && secondBookIndex < mBookList.size()) {
-                Log.d("BookSearchAdapter", "Second book clicked at position " + secondBookIndex);
                 mListener.onBookClick(mBookList.get(secondBookIndex));
             }
         });

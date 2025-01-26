@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.reader;
+package fr.picsou.mangafinder.Read.Chapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;

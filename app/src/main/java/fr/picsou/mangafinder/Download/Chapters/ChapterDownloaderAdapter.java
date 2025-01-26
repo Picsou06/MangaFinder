@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.downloader;
+package fr.picsou.mangafinder.Download.Chapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;

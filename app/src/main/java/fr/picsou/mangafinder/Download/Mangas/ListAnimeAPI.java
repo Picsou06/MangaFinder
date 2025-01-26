@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.downloader;
+package fr.picsou.mangafinder.Download.Mangas;
 
 import android.content.Context;
 import android.os.Handler;
@@ -19,6 +19,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+
+import fr.picsou.mangafinder.BookLocalDatabase;
 
 public class ListAnimeAPI {
     private static final String API_BASE_URL = "http://%s:%d/";

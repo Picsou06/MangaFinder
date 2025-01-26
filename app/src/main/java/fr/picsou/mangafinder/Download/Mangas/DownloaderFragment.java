@@ -1,8 +1,7 @@
 // DownloaderFragment.java
 
-package fr.picsou.mangafinder.downloader;
+package fr.picsou.mangafinder.Download.Mangas;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -27,12 +26,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
+import fr.picsou.mangafinder.BookLocalDatabase;
+import fr.picsou.mangafinder.Download.Chapters.ChapitreDownloaderActivity;
 import fr.picsou.mangafinder.R;
 import fr.picsou.mangafinder.SettingsActivity;
-import java.util.concurrent.CountDownLatch;
 
 public class DownloaderFragment extends Fragment implements BookDownloaderAdapter.OnBookClickListener {
     private ListAnimeAPI listAnimeAPI;

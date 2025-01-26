@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.reader;
+package fr.picsou.mangafinder.Read.Chapters;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;

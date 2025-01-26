@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import fr.picsou.mangafinder.BookLocalDatabase;
+import fr.picsou.mangafinder.Read.Chapters.ChapterClass;
+
 public class APIConnector {
     private String API_BASE_URL;
     private final Context context;
@@ -80,7 +83,7 @@ public class APIConnector {
                     JSONObject chapterObject = chaptersArray.getJSONObject(i);
                     String chapterId = chapterObject.getString("itemid");
                     String title = chapterObject.getString("title");
-                    Chapter chapter = new Chapter(chapterId, "chapter", title, language, cover, MangaName);
+                    Chapter chapter = new Chapter(chapterId, "chapter", title, language, cover, MangaName, Integer.parseInt(chapterId));
                     chapters.add(chapter);
                 }
             } catch (Exception e) {
@@ -154,14 +157,16 @@ public class APIConnector {
         private String language;
         private String imageURL;
         private String mangaName;
+        private int mangaId;
 
-        public Chapter(String id, String type, String title, String language, String imageURL, String mangaName) {
+        public Chapter(String id, String type, String title, String language, String imageURL, String mangaName, int mangaId) {
             this.id = id;
             this.type = type;
             this.title = title;
             this.language = language;
             this.imageURL = imageURL;
             this.mangaName = mangaName;
+            this.mangaId = mangaId;
         }
 
         public String getId() {
@@ -189,8 +194,32 @@ public class APIConnector {
         }
 
         public boolean isDownloaded(Context context) {
-            File file = new File(context.getFilesDir(), "MangaFinder/" + language + "-" + mangaName + "/" + title + ".cbz");
-            return file.exists();
+            final boolean[] result = {false};
+            Thread thread = new Thread(() -> {
+                BookLocalDatabase db = BookLocalDatabase.getDatabase(context);
+                ChapterClass chapter = db.chapterDao().getChapterById(Integer.parseInt(id));
+                if (chapter != null) {
+                    File file = new File(chapter.getPath());
+                    if (file.exists()) {
+                        result[0] = true;
+                    }
+                }
+            });
+            thread.start();
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return result[0];
+        }
+
+        public int getMangaId() {
+            return mangaId;
+        }
+
+        public void setMangaId(int mangaId) {
+            this.mangaId = mangaId;
         }
     }
 }

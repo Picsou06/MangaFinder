@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.reader;
+package fr.picsou.mangafinder.Read.Chapters;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 import fr.picsou.mangafinder.R;
+import fr.picsou.mangafinder.Read.Mangas.MangaReaderListFragment;
 
 public class ChapitreReaderListActivity extends AppCompatActivity implements ChapterReaderAdapter.OnChapterClickListener {
     private ChapterReaderAdapter adapter;

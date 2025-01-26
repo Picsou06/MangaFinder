@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.reader;
+package fr.picsou.mangafinder.Read.Mangas;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -35,8 +35,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import fr.picsou.mangafinder.downloader.BookLocalDatabase;
+import fr.picsou.mangafinder.BookLocalDatabase;
+import fr.picsou.mangafinder.Download.Mangas.BookClass;
+import fr.picsou.mangafinder.Download.Mangas.BookDownloaderAdapter;
 import fr.picsou.mangafinder.R;
+import fr.picsou.mangafinder.Read.Chapters.ChapitreReaderListActivity;
+import fr.picsou.mangafinder.Read.Chapters.ChapterClass;
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -62,14 +66,11 @@ public class MangaReaderListFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_view_books);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
-        ImageButton btnOpenMangaFinder = view.findViewById(R.id.btn_open_anime_finder);
         importMenuLayout = view.findViewById(R.id.import_menu_layout);
         editTextMangaName = view.findViewById(R.id.edit_text_anime_name);
         Button btnChooseFile = view.findViewById(R.id.btn_choose_file);
         textViewSelectedFile = view.findViewById(R.id.text_view_selected_file);
         Button btnImport = view.findViewById(R.id.btn_import);
-
-        btnOpenMangaFinder.setOnClickListener(v -> toggleImportMenu());
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         bookList = getListOfBooks();
@@ -86,32 +87,9 @@ public class MangaReaderListFragment extends Fragment {
 
             bookAdapter.setOnBookClickListener(this::openChapitreSelectorActivity);
         }
-
-        btnChooseFile.setOnClickListener(this::onChooseFileClick);
-        btnImport.setOnClickListener(this::onImportClick);
-
-        // Configure swipe-to-refresh
         swipeRefreshLayout.setOnRefreshListener(this::refreshBookListInternal);
 
         return view;
-    }
-
-
-    private void toggleImportMenu() {
-        FrameLayout overlay = view.findViewById(R.id.import_menu_overlay);
-
-        if (importMenuLayout.getVisibility() == View.VISIBLE) {
-            importMenuLayout.setVisibility(View.GONE);
-            overlay.setVisibility(View.GONE);
-            overlay.setOnClickListener(null); // Retire l'action de clic
-        } else {
-            importMenuLayout.setVisibility(View.VISIBLE);
-            overlay.setVisibility(View.VISIBLE);
-            overlay.bringToFront();
-            importMenuLayout.bringToFront();
-
-            overlay.setOnClickListener(v -> toggleImportMenu());
-        }
     }
 
     public void onChooseFileClick(View view) {
@@ -183,82 +161,6 @@ public class MangaReaderListFragment extends Fragment {
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    public void onImportClick(View view) {
-        toggleImportMenu();
-        String MangaName = editTextMangaName.getText().toString().trim();
-
-        if (MangaName.isEmpty()) {
-            Toast.makeText(getContext(), "Veuillez saisir le nom de l'anime.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (selectedFile == null || !selectedFile.exists()) {
-            Toast.makeText(getContext(), "Veuillez sélectionner un fichier .cbz valide.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        File animeFolder = new File(requireActivity().getFilesDir(), "MangaFinder/" + MangaName);
-        if (!animeFolder.exists()) {
-            animeFolder.mkdirs();
-        }
-
-        File destinationFile = new File(animeFolder, selectedFile.getName());
-        try {
-            copyFile(selectedFile, destinationFile);
-            Toast.makeText(getContext(), "Fichier importé avec succès.", Toast.LENGTH_SHORT).show();
-            textViewSelectedFile.setText("Aucun fichier sélectionné");
-            textViewSelectedFile.setVisibility(View.GONE);
-        } catch (IOException e) {
-            e.printStackTrace();
-            Toast.makeText(getContext(), "Erreur lors de l'importation du fichier.", Toast.LENGTH_SHORT).show();
-        }
-
-        Thread downloadThread = new Thread(() -> {
-            String imageCoverLink = BookLocalDatabase.getDatabase(getContext()).bookDao().getPicture(MangaName);
-
-            if (imageCoverLink != null) {
-                try {
-                    URL url = new URL(imageCoverLink);
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.connect();
-
-                    File coverFile = new File(animeFolder, "cover.jpg");
-
-                    FileOutputStream outputStream = new FileOutputStream(coverFile);
-                    InputStream inputStream = connection.getInputStream();
-
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-
-                    inputStream.close();
-                    outputStream.close();
-
-                    // Retourner sur le thread principal pour afficher un Toast
-                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Image de couverture téléchargée et sauvegardée.", Toast.LENGTH_SHORT).show());
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // Retourner sur le thread principal pour afficher un Toast
-                    requireActivity().runOnUiThread(() -> Toast.makeText(getContext(), "Erreur lors du téléchargement de l'image de couverture.", Toast.LENGTH_SHORT).show());
-                }
-            }
-        });
-
-        downloadThread.start();
-
-        try {
-            downloadThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        refreshBookListInternal();
-    }
-
-
     private void copyFile(File sourceFile, File destFile) throws IOException {
         try (FileChannel source = new FileInputStream(sourceFile).getChannel();
              FileChannel destination = new FileOutputStream(destFile).getChannel()) {
@@ -311,33 +213,15 @@ public class MangaReaderListFragment extends Fragment {
 
     private List<BookReaderClass> getListOfBooks() {
         List<BookReaderClass> bookList = new ArrayList<>();
+        new Thread(() -> {
+            BookLocalDatabase db = BookLocalDatabase.getDatabase(getContext());
 
-        File MangaFinderDir = new File(requireActivity().getFilesDir(), "MangaFinder");
-        if (MangaFinderDir.exists() && MangaFinderDir.isDirectory()) {
-            File[] animeFolders = MangaFinderDir.listFiles(File::isDirectory);
+            List<ChapterClass> chapterList = db.chapterDao().getAllChapters();
 
-            if (animeFolders != null) {
-                for (File folder : animeFolders) {
-                    String title = folder.getName();
-                    String imageCoverPath = folder.getAbsolutePath() + File.separator + "cover.jpg";
-
-                    String[] titleParts = title.split("-", 2);
-                    String language = (titleParts.length > 1) ? titleParts[0].trim() : "Unknown";
-                    String actualTitle = (titleParts.length > 1) ? titleParts[1].trim() : title;
-
-                    // Check if cover.jpg exists
-                    File coverFile = new File(imageCoverPath);
-                    if (!coverFile.exists()) {
-                        imageCoverPath = null;
-                    }
-
-                    int numberOfPages = getNumberOfPages(folder);
-
-                    BookReaderClass book = new BookReaderClass(actualTitle, imageCoverPath, String.valueOf(numberOfPages), language);
-                    bookList.add(book);
-                }
+            for (ChapterClass chapter : chapterList) {
+                bookList.add(db.bookDao().getBookById(chapter.getId()));
             }
-        }
+        }).start();
 
         return bookList;
     }
@@ -346,7 +230,7 @@ public class MangaReaderListFragment extends Fragment {
     private int getNumberOfPages(File folder) {
         File[] files = folder.listFiles();
         if (files != null) {
-            return files.length - 1; // Assuming cover.jpg is not counted as a page
+            return files.length - 1;
         }
         return 0;
     }

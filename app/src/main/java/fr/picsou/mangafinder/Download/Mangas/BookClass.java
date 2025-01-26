@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.downloader;
+package fr.picsou.mangafinder.Download.Mangas;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;

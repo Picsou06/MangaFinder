@@ -1,4 +1,4 @@
-package fr.picsou.mangafinder.downloader;
+package fr.picsou.mangafinder.Download.Mangas;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
@@ -6,6 +6,8 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
 import java.util.List;
+
+import fr.picsou.mangafinder.Read.Mangas.BookReaderClass;
 
 @Dao
 public interface BookDAO {
@@ -21,8 +23,11 @@ public interface BookDAO {
     List<BookClass> searchBooks(String searchText, List<String> languages);
 
 
-    @Query("SELECT * FROM books WHERE language IN (:languages) ORDER BY title")
-    List<BookClass> getAllBooks(List<String> languages);
+    @Query("SELECT * FROM books ORDER BY title")
+    List<BookClass> getAllBooks();
+
+    @Query("SELECT * FROM books WHERE id = :id")
+    BookReaderClass getBookById(int id);
 
     @Query("DELETE FROM books")
     void DeleteAllBook();

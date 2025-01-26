@@ -1,5 +1,5 @@
 // ChapitreDownloaderActivity.java
-package fr.picsou.mangafinder.downloader;
+package fr.picsou.mangafinder.Download.Chapters;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,7 +24,7 @@ import java.util.Objects;
 
 import fr.picsou.mangafinder.Connector.APIConnector;
 import fr.picsou.mangafinder.R;
-import fr.picsou.mangafinder.reader.MangaViewer;
+import fr.picsou.mangafinder.Read.Chapters.MangaViewer;
 
 public class ChapitreDownloaderActivity extends AppCompatActivity implements ChapterDownloaderAdapter.OnChapterClickListener {
     private ChapterDownloaderAdapter adapter;

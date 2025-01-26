@@ -19,9 +19,9 @@
         android:theme="@style/Theme.MangaFinder"
         tools:targetApi="31">
         <activity android:name=".SettingsActivity" />
-        <activity android:name=".reader.ChapitreReaderListActivity" />
-        <activity android:name=".downloader.ChapitreDownloaderActivity" />
-        <activity android:name=".reader.MangaViewer" />
+        <activity android:name=".Read.Chapters.ChapitreReaderListActivity" />
+        <activity android:name=".Download.Chapters.ChapitreDownloaderActivity" />
+        <activity android:name=".Read.Chapters.MangaViewer" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

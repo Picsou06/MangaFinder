@@ -15,8 +15,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.io.File;
 
-import fr.picsou.mangafinder.downloader.DownloaderFragment;
-import fr.picsou.mangafinder.reader.MangaReaderListFragment;
+import fr.picsou.mangafinder.Download.Mangas.DownloaderFragment;
+import fr.picsou.mangafinder.Read.Mangas.MangaReaderListFragment;
 
 public class MainActivity extends AppCompatActivity {
 
