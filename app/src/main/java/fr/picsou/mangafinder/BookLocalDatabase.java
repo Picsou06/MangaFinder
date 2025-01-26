@@ -11,7 +11,7 @@ import fr.picsou.mangafinder.Download.Mangas.BookDAO;
 import fr.picsou.mangafinder.Read.Chapters.ChapterClass;
 import fr.picsou.mangafinder.Read.Chapters.ChapterDAO;
 
-@Database(entities = {BookClass.class, ChapterClass.class}, version = 3, exportSchema = false)
+@Database(entities = {BookClass.class, ChapterClass.class}, version = 4, exportSchema = false)
 public abstract class BookLocalDatabase extends RoomDatabase {
 
     public abstract BookDAO bookDao();

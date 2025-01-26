@@ -34,6 +34,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
 import fr.picsou.mangafinder.BookLocalDatabase;
 import fr.picsou.mangafinder.Download.Mangas.BookClass;
@@ -47,8 +48,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 public class MangaReaderListFragment extends Fragment {
 
     private BookReaderAdapter bookAdapter;
-    private LinearLayout importMenuLayout;
-    private EditText editTextMangaName;
     private TextView textViewSelectedFile;
     private static MangaReaderListFragment instance;
     private File selectedFile;
@@ -66,12 +65,7 @@ public class MangaReaderListFragment extends Fragment {
         recyclerView = view.findViewById(R.id.recycler_view_books);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         TextView textViewEmpty = view.findViewById(R.id.text_view_empty);
-        importMenuLayout = view.findViewById(R.id.import_menu_layout);
-        editTextMangaName = view.findViewById(R.id.edit_text_anime_name);
-        Button btnChooseFile = view.findViewById(R.id.btn_choose_file);
         textViewSelectedFile = view.findViewById(R.id.text_view_selected_file);
-        Button btnImport = view.findViewById(R.id.btn_import);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         bookList = getListOfBooks();
 
@@ -90,13 +84,6 @@ public class MangaReaderListFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(this::refreshBookListInternal);
 
         return view;
-    }
-
-    public void onChooseFileClick(View view) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        startActivityForResult(intent, 1);
     }
 
     @Override
@@ -161,13 +148,6 @@ public class MangaReaderListFragment extends Fragment {
         }
     }
 
-    private void copyFile(File sourceFile, File destFile) throws IOException {
-        try (FileChannel source = new FileInputStream(sourceFile).getChannel();
-             FileChannel destination = new FileOutputStream(destFile).getChannel()) {
-            destination.transferFrom(source, 0, source.size());
-        }
-    }
-
     public static void refreshBookList() {
         if (instance != null) {
             instance.refreshBookListInternal();
@@ -213,25 +193,29 @@ public class MangaReaderListFragment extends Fragment {
 
     private List<BookReaderClass> getListOfBooks() {
         List<BookReaderClass> bookList = new ArrayList<>();
+        CountDownLatch latch = new CountDownLatch(1);
+
         new Thread(() -> {
             BookLocalDatabase db = BookLocalDatabase.getDatabase(getContext());
 
             List<ChapterClass> chapterList = db.chapterDao().getAllChapters();
 
             for (ChapterClass chapter : chapterList) {
-                bookList.add(db.bookDao().getBookById(chapter.getId()));
+                if (db.bookDao().getBookById(chapter.getBookId()) == null) {
+                    db.chapterDao().deleteChapters(chapter.getBookId());
+                    continue;
+                }
+                bookList.add(db.bookDao().getBookById(chapter.getBookId()));
             }
+            latch.countDown();
         }).start();
 
-        return bookList;
-    }
-
-
-    private int getNumberOfPages(File folder) {
-        File[] files = folder.listFiles();
-        if (files != null) {
-            return files.length - 1;
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        return 0;
+
+        return bookList;
     }
 }

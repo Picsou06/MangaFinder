@@ -73,7 +73,7 @@ public class ChapitreDownloaderActivity extends AppCompatActivity implements Cha
             adapter = new ChapterDownloaderAdapter(this, mangaChapters, this);
             recyclerView.setAdapter(adapter);
 
-            APIConnector = new APIConnector(this);
+            APIConnector = new APIConnector(this, mangaID);
             loadChapters(id, coverUrl, MangaName);
         }
 

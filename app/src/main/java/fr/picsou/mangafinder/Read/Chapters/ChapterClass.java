@@ -9,11 +9,11 @@ public class ChapterClass {
     private int id;
     private String title;
     private String path;
-    private int BookId;
+    private String BookId;
     private Boolean readed;
     private int page;
 
-    public ChapterClass(String title, String path, int BookId, Boolean readed, int page) {
+    public ChapterClass(String title, String path, String BookId, Boolean readed, int page) {
         this.title = title;
         this.path = path;
         this.BookId = BookId;
@@ -45,11 +45,11 @@ public class ChapterClass {
         this.path = path;
     }
 
-    public int getBookId() {
+    public String getBookId() {
         return BookId;
     }
 
-    public void setBookId(int BookId) {
+    public void setBookId(String BookId) {
         this.BookId = BookId;
     }
 

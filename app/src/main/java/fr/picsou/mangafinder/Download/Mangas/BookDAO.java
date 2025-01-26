@@ -27,7 +27,7 @@ public interface BookDAO {
     List<BookClass> getAllBooks();
 
     @Query("SELECT * FROM books WHERE id = :id")
-    BookReaderClass getBookById(int id);
+    BookReaderClass getBookById(String id);
 
     @Query("DELETE FROM books")
     void DeleteAllBook();

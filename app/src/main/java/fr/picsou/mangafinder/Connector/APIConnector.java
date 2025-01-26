@@ -25,9 +25,11 @@ public class APIConnector {
     private String API_BASE_URL;
     private final Context context;
     private final ExecutorService executorService;
+    private final String mangaId;
 
-    public APIConnector(Context context) {
+    public APIConnector(Context context, String mangaId) {
         this.context = context;
+        this.mangaId = mangaId;
         this.executorService = Executors.newFixedThreadPool(4);
         updateApiBaseUrl();
     }
@@ -83,7 +85,7 @@ public class APIConnector {
                     JSONObject chapterObject = chaptersArray.getJSONObject(i);
                     String chapterId = chapterObject.getString("itemid");
                     String title = chapterObject.getString("title");
-                    Chapter chapter = new Chapter(chapterId, "chapter", title, language, cover, MangaName, Integer.parseInt(chapterId));
+                    Chapter chapter = new Chapter(chapterId, "chapter", title, language, cover, MangaName, this.mangaId);
                     chapters.add(chapter);
                 }
             } catch (Exception e) {
@@ -157,9 +159,9 @@ public class APIConnector {
         private String language;
         private String imageURL;
         private String mangaName;
-        private int mangaId;
+        private String mangaId;
 
-        public Chapter(String id, String type, String title, String language, String imageURL, String mangaName, int mangaId) {
+        public Chapter(String id, String type, String title, String language, String imageURL, String mangaName, String mangaId) {
             this.id = id;
             this.type = type;
             this.title = title;
@@ -214,11 +216,11 @@ public class APIConnector {
             return result[0];
         }
 
-        public int getMangaId() {
+        public String getMangaId() {
             return mangaId;
         }
 
-        public void setMangaId(int mangaId) {
+        public void setMangaId(String mangaId) {
             this.mangaId = mangaId;
         }
     }
