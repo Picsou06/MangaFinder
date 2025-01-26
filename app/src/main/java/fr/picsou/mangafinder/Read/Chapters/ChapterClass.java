@@ -38,6 +38,7 @@ public class ChapterClass {
     }
 
     public String getPath() {
+        System.out.println(path);
         return path;
     }
 

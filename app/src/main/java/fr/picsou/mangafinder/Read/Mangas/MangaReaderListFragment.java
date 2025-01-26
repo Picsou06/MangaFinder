@@ -192,7 +192,7 @@ public class MangaReaderListFragment extends Fragment {
             List<ChapterClass> chapterList = db.chapterDao().getAllChapters();
 
             for (ChapterClass chapter : chapterList) {
-                if (db.bookDao().getBookById(chapter.getBookId()) == null) {
+                if (db.bookDao().getBookById(chapter.getBookId()) == null || !new File(getContext().getFilesDir(), chapter.getPath()).exists()) {
                     db.chapterDao().deleteChapters(chapter.getBookId());
                     continue;
                 }
@@ -200,7 +200,6 @@ public class MangaReaderListFragment extends Fragment {
             }
             for (BookReaderClass book : bookList) {
                 File mangaDir = new File(getContext().getFilesDir(), "MangaFinder/" + book.getLanguage() + "-" + book.getTitle());
-                System.out.println(mangaDir.getAbsolutePath());
                 File cover = new File(mangaDir, "cover.jpg");
                 if (cover.exists()) {
                     book.setImageCover(cover.getAbsolutePath());

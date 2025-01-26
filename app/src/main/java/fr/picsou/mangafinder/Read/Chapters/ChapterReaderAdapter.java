@@ -16,16 +16,16 @@ import java.util.List;
 import fr.picsou.mangafinder.R;
 
 public class ChapterReaderAdapter extends RecyclerView.Adapter<ChapterReaderAdapter.ViewHolder> {
-    private final List<File> chapters;
+    private final List<ChapterClass> chapters;
     private final Context context;
     private final OnChapterClickListener listener;
 
     public interface OnChapterClickListener {
-        void onChapterClick(File chapter);
-        void onDeleteClick(File chapter);
+        void onChapterClick(ChapterClass chapter);
+        void onDeleteClick(ChapterClass chapter);
     }
 
-    public ChapterReaderAdapter(Context context, List<File> chapters, OnChapterClickListener listener) {
+    public ChapterReaderAdapter(Context context, List<ChapterClass> chapters, OnChapterClickListener listener) {
         this.context = context;
         this.chapters = chapters;
         this.listener = listener;
@@ -40,14 +40,14 @@ public class ChapterReaderAdapter extends RecyclerView.Adapter<ChapterReaderAdap
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        File chapter = chapters.get(position);
-        holder.chapterName.setText(chapter.getName());
+        ChapterClass chapter = chapters.get(position);
+        holder.chapterName.setText(chapter.getTitle());
 
         holder.itemView.setOnClickListener(v -> listener.onChapterClick(chapter));
         holder.deleteButton.setOnClickListener(v -> listener.onDeleteClick(chapter));
     }
 
-    public void setChapters(List<File> chapters) {
+    public void setChapters(List<ChapterClass> chapters) {
         this.chapters.clear();
         this.chapters.addAll(chapters);
         notifyDataSetChanged();

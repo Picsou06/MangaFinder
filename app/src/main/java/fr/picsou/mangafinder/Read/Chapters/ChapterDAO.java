@@ -26,4 +26,7 @@ public interface ChapterDAO {
 
     @Query("Delete FROM chapters WHERE BookId = :bookId")
     void deleteChapters(String bookId);
+
+    @Query("Delete FROM chapters WHERE id = :id")
+    void deleteChapter(int id);
 }

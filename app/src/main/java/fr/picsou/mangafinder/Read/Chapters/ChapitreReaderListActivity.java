@@ -22,14 +22,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 
+import fr.picsou.mangafinder.BookLocalDatabase;
 import fr.picsou.mangafinder.R;
 import fr.picsou.mangafinder.Read.Mangas.MangaReaderListFragment;
 
 public class ChapitreReaderListActivity extends AppCompatActivity implements ChapterReaderAdapter.OnChapterClickListener {
     private ChapterReaderAdapter adapter;
-    private List<File> chapterFiles;
+    private List<ChapterClass> chapterFiles;
     private SwipeRefreshLayout swipeRefreshLayout;
+    private String MangaName;
     String language;
 
     @SuppressLint("ResourceType")
@@ -67,6 +70,7 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
         if (args != null) {
             String coverUrl = args.getString("cover", "");
             String MangaName = args.getString("MangaName", "");
+            this.MangaName = MangaName;
 
             if (coverUrl != null && !coverUrl.isEmpty()) {
                 Glide.with(this)
@@ -79,7 +83,7 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
             String actualTitle = (titleParts.length > 1) ? titleParts[1].trim() : MangaName;
             toolbar.setTitle(actualTitle);
 
-            chapterFiles = getChapterFiles(MangaName);
+            chapterFiles = getChapter(MangaName);
 
             RecyclerView recyclerView = findViewById(R.id.list_chapters);
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -93,28 +97,39 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
 
     private void reloadChapterFiles(String MangaName) {
         System.out.println("Reloading chapters");
-        chapterFiles = getChapterFiles(MangaName);
+        chapterFiles = getChapter(MangaName);
         adapter.setChapters(chapterFiles);
         adapter.notifyDataSetChanged();
         swipeRefreshLayout.setRefreshing(false);
     }
 
-    private List<File> getChapterFiles(String MangaName) {
-        List<File> chapters = new ArrayList<>();
-        File animeDir = new File(getFilesDir(), "MangaFinder" + File.separator + MangaName);
-        if (animeDir.exists() && animeDir.isDirectory()) {
-            File[] files = animeDir.listFiles((dir, name) -> name.endsWith(".cbz"));
-            if (files != null) {
-                Collections.addAll(chapters, files);
-            }
+    private List<ChapterClass> getChapter(String MangaId) {
+        final List<ChapterClass>[] bookList = new List[]{new ArrayList<>()};
+        CountDownLatch latch = new CountDownLatch(1);
+
+        new Thread(() -> {
+            BookLocalDatabase db = BookLocalDatabase.getDatabase(this);
+            String mangaidWithoutLanguage = MangaId.split("-", 2)[1];
+            bookList[0] = db.chapterDao().getAllChaptersOfManga(mangaidWithoutLanguage);
+            System.out.println("Chapter count: " + bookList[0].size() + " for " + mangaidWithoutLanguage);
+            latch.countDown();
+        }).start();
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        return chapters;
+        System.out.println("Chapter count: " + bookList[0].size());
+        return bookList[0];
     }
 
     @Override
-    public void onChapterClick(File chapter) {
-        String chapterName = chapter.getName();
-        String chapterPath = chapter.getAbsolutePath();
+    public void onChapterClick(ChapterClass chapter) {
+        File file = new File(chapter.getPath());
+
+        String chapterName = file.getName();
+        String chapterPath = file.getAbsolutePath();
         Intent intent = new Intent(ChapitreReaderListActivity.this, MangaViewer.class);
         intent.putExtra("MANGA_NAME", chapterName);
         intent.putExtra("CBZ_FILE_PATH", chapterPath);
@@ -123,14 +138,19 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
 
     @SuppressLint("NotifyDataSetChanged")
     @Override
-    public void onDeleteClick(File chapter) {
+    public void onDeleteClick(ChapterClass chapter) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Confirmation");
         builder.setMessage("Voulez-vous vraiment supprimer ce chapitre ?");
         builder.setPositiveButton("Oui", (dialog, which) -> {
-            if (chapter.delete()) {
+            File file = new File(chapter.getPath());
+            if (file.delete()) {
                 chapterFiles.remove(chapter);
                 adapter.notifyDataSetChanged();
+                new Thread(() -> {
+                    BookLocalDatabase db = BookLocalDatabase.getDatabase(null);
+                    db.chapterDao().deleteChapter(chapter.getId());
+                }).start();
                 if (adapter.getItemCount() == 0) {
                     boolean deleted = deleteAnimeFolder();
                     if (deleted) {
@@ -150,6 +170,10 @@ public class ChapitreReaderListActivity extends AppCompatActivity implements Cha
         builder.setMessage("Voulez-vous vraiment supprimer cet anime ?");
         builder.setPositiveButton("Oui", (dialog, which) -> {
             boolean deleted = deleteAnimeFolder();
+            new Thread(() -> {
+                BookLocalDatabase db = BookLocalDatabase.getDatabase(null);
+                db.chapterDao().deleteChapters(this.MangaName);
+            }).start();
             if (deleted) {
                 MangaReaderListFragment.refreshBookList();
                 finish();
